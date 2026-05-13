@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OuroTran — Sistema de Fiscalização</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--s3:#252525;--b1:#2a2a2a;--b2:#333;--gold:#c9a84c;--gold2:#e8c96a;--gd:rgba(201,168,76,0.12);--gd2:rgba(201,168,76,0.22);--tx:#f0ede6;--tx2:#9a9590;--tx3:#5c5a56;--red:#e05252;--rd:rgba(224,82,82,0.12);--green:#4caf7d;--gn:rgba(76,175,125,0.12);--amb:#e0a352;--ad:rgba(224,163,82,0.12);--blue:#5294e0;--bd:rgba(82,148,224,0.12);--r:8px;--rl:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);display:flex;height:100vh;overflow:hidden;font-size:14px}
+.sidebar{width:224px;min-width:224px;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow-y:auto}
+.logo-area{padding:18px 16px 14px;border-bottom:1px solid var(--b1)}
+.logo-box{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#0d0d0d}
+.logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px}
+.logo-sub{font-size:9px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;font-weight:500;margin-top:1px}
+.status-bar{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--tx2);letter-spacing:.5px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.nav-sec{padding:14px 10px 4px}
+.nav-lbl{font-size:9px;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:0 6px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--tx2);font-size:13px;transition:all .15s;margin-bottom:1px;position:relative;user-select:none}
+.nav-item:hover{background:var(--s2);color:var(--tx)}
+.nav-item.active{background:var(--gd);color:var(--gold)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:60%;background:var(--gold);border-radius:0 2px 2px 0}
+.badge{margin-left:auto;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:20px;text-align:center;background:var(--gd);color:var(--gold)}
+.badge.red{background:var(--rd);color:var(--red)}
+.badge.green{background:var(--gn);color:var(--green)}
+.sidebar-footer{margin-top:auto;padding:14px 12px;border-top:1px solid var(--b1);font-size:10px;color:var(--tx3)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--s1);border-bottom:1px solid var(--b1);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.page-sub{font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--tx2)}
+.dvr{width:1px;height:16px;background:var(--b2)}
+.city-tag{background:var(--gd);color:var(--gold);padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px}
+.content{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.gold::after{background:var(--gold)}.kpi.green::after{background:var(--green)}.kpi.red::after{background:var(--red)}.kpi.blue::after{background:var(--blue)}
+.kpi-lbl{font-size:10px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.kpi-val{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1}
+.kpi-sub{font-size:11px;color:var(--tx3);margin-top:5px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:18px}
+.sec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-title span{font-size:10px;color:var(--tx3);font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:1px;text-transform:uppercase}
+
+/* ALERTAS */
+.alert-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r);background:var(--s2);border-left:3px solid;margin-bottom:6px}
+.alert-item.red{border-color:var(--red)}.alert-item.amb{border-color:var(--amb)}.alert-item.green{border-color:var(--green)}
+.alert-name{font-size:12px;font-weight:500}.alert-detail{font-size:11px;color:var(--tx2);margin-top:1px}
+.alert-tag{margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.tag-red{background:var(--rd);color:var(--red)}.tag-amb{background:var(--ad);color:var(--amb)}.tag-green{background:var(--gn);color:var(--green)}
+
+/* RECENTES */
+.rec-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r);background:var(--s2);margin-bottom:6px}
+.rec-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.rec-icon.ok{background:var(--gn);color:var(--green)}.rec-icon.nok{background:var(--rd);color:var(--red)}.rec-icon.amb{background:var(--ad);color:var(--amb)}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.pill.regular{background:var(--gn);color:var(--green)}.pill.irregular{background:var(--rd);color:var(--red)}.pill.autuado{background:var(--ad);color:var(--amb)}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.btn-gold{background:var(--gold);color:#0d0d0d}.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:transparent;color:var(--tx2);border:1px solid var(--b2)}.btn-outline:hover{background:var(--s2);color:var(--tx)}
+.btn-red{background:var(--rd);color:var(--red);border:1px solid transparent}.btn-red:hover{background:rgba(224,82,82,.2)}
+.btn-green{background:var(--gn);color:var(--green);border:1px solid transparent}.btn-green:hover{background:rgba(76,175,125,.2)}
+.btn-wpp{background:#25d366;color:#fff;display:flex;align-items:center;gap:6px}.btn-wpp:hover{background:#1da851}
+.btn-blue{background:var(--bd);color:var(--blue);border:1px solid transparent}.btn-blue:hover{background:rgba(82,148,224,.2)}
+.btn-sm{padding:5px 11px;font-size:11px}
+.btn-group{display:flex;gap:8px}
+
+/* FORM */
+.form-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.form-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700}
+.form-sub{font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fg{display:flex;flex-direction:column;gap:5px}.fg.full{grid-column:1/-1}
+.fl{font-size:11px;color:var(--tx2);letter-spacing:.5px;font-weight:500}
+.fi{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;width:100%}
+.fi:focus{border-color:var(--gold)}.fi::placeholder{color:var(--tx3)}
+select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235c5a56'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* CHECKLIST */
+.ck-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.ck-item{display:flex;align-items:center;gap:9px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;transition:all .15s;user-select:none}
+.ck-item.ok{border-color:var(--green);background:var(--gn)}.ck-item.nok{border-color:var(--red);background:var(--rd)}
+.ck-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .15s}
+.ck-item.ok .ck-box{background:var(--green);border-color:var(--green);color:#fff}.ck-item.nok .ck-box{background:var(--red);border-color:var(--red);color:#fff}
+.ck-lbl{font-size:12px;color:var(--tx);line-height:1.3}
+
+/* TABLE */
+.tbl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:7px 11px;min-width:240px}
+.search-box input{background:none;border:none;outline:none;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;width:100%}
+.search-box input::placeholder{color:var(--tx3)}
+select.fsel{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:7px 28px 7px 11px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235c5a56'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;padding:9px 13px;border-bottom:1px solid var(--b1);text-align:left}
+tbody tr{border-bottom:1px solid var(--b1);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--s2)}
+tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
+.placa{background:var(--s3);border:1px solid var(--b2);border-radius:5px;padding:2px 7px;font-size:11px;font-family:monospace;letter-spacing:1px}
+.empty{text-align:center;padding:50px 20px;color:var(--tx3)}
+
+/* PERM CARDS */
+.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.perm-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:15px;cursor:pointer;transition:all .15s;position:relative}
+.perm-card:hover{border-color:var(--b2);transform:translateY(-1px)}
+.perm-card.irregular-card{border-color:rgba(224,82,82,.3)}
+.perm-avatar{width:38px;height:38px;border-radius:50%;background:var(--gd);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--gold);margin-bottom:10px;flex-shrink:0}
+.perm-avatar.irr{background:var(--rd);border-color:var(--red);color:var(--red)}
+.perm-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.perm-num{font-size:11px;color:var(--gold);font-weight:600;margin-bottom:6px}
+.perm-det{font-size:11px;color:var(--tx2);margin-bottom:2px}
+.perm-obs{font-size:10px;color:var(--tx3);margin-top:6px;font-style:italic;line-height:1.4}
+.perm-status{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;margin-top:8px}
+.ps-ok{background:var(--gn);color:var(--green)}.ps-irr{background:var(--rd);color:var(--red)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rl);padding:24px;width:580px;max-height:88vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.close-btn{background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--tx2);cursor:pointer;padding:3px 8px;font-size:15px}
+.close-btn:hover{color:var(--tx)}
+
+/* WPP */
+.wpp-panel{background:var(--s2);border-radius:var(--rl);padding:18px;margin-bottom:16px;border:1px solid var(--b2)}
+.wpp-preview{background:#0d1117;border-radius:10px;padding:14px 16px;margin-top:12px;font-family:monospace;font-size:12px;color:#4ade80;line-height:1.8;white-space:pre-wrap;border:1px solid #1a2a1a;max-height:180px;overflow-y:auto}
+.wpp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.wpp-stat{background:var(--s3);border-radius:var(--r);padding:12px;text-align:center}
+.wpp-stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.wpp-stat-lbl{font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.irr-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.irr-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--s2);border-radius:var(--r);border-left:3px solid var(--red)}
+.irr-item .wpp-btn{margin-left:auto}
+.irr-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--b2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.irr-check.checked{background:var(--green);border-color:var(--green)}
+
+/* GUARDA */
+.guarda-card{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.guarda-card .placa{font-size:12px}
+.guarda-obs{font-size:11px;color:var(--tx2);font-style:italic}
+
+/* NOTIF */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:13px 15px;background:var(--s2);border-radius:var(--r);border-left:3px solid;margin-bottom:8px}
+.notif-item.vencido{border-color:var(--red)}.notif-item.vencendo{border-color:var(--amb)}.notif-item.ok{border-color:var(--green)}
+.notif-icon{font-size:18px;margin-top:1px}
+.notif-title{font-size:13px;font-weight:500}.notif-desc{font-size:12px;color:var(--tx2);margin-top:2px}.notif-time{font-size:11px;color:var(--tx3);margin-top:3px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--s1);border:1px solid var(--green);border-radius:var(--r);padding:12px 16px;font-size:13px;color:var(--green);z-index:200;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.show{display:flex}
+
+/* SECTION DIVIDER */
+.sdiv{margin:20px 0 14px;border-bottom:1px solid var(--b1);padding-bottom:10px}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-box">
+      <div class="logo-icon">OP</div>
+      <div>
+        <div class="logo-name">OUROTRAN</div>
+        <div class="logo-sub">Fiscalização de Táxi</div>
+      </div>
+    </div>
+    <div class="status-bar"><div class="dot"></div>SISTEMA ATIVO — OURO PRETO / MG</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Painel</div>
+    <div class="nav-item active" data-page="dashboard">◈ Dashboard <span class="badge" id="b-dash">110</span></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Cadastros</div>
+    <div class="nav-item" data-page="permissionarios">👤 Permissionários <span class="badge" id="b-perm">110</span></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Operações</div>
+    <div class="nav-item" data-page="fiscalizacao">🔍 Fiscalização</div>
+    <div class="nav-item" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp">62</span></div>
+    <div class="nav-item" data-page="guarda">🛡️ Guarda Municipal <span class="badge red" id="b-guard">62</span></div>
+    <div class="nav-item" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif">0</span></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Histórico</div>
+    <div class="nav-item" data-page="historico">📂 Histórico</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Dados</div>
+    <div class="nav-item" onclick="exportCSV()">↓ Exportar CSV</div>
+    <div class="nav-item" onclick="exportGuarda()">📋 Relatório Guarda</div>
+  </div>
+  <div class="sidebar-footer">OuroTran v3.0 · 2026<br>Prefeitura de Ouro Preto — OuroTran</div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="ttl">Dashboard</div>
+      <div class="page-sub" id="sub">VISÃO GERAL DO SISTEMA</div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-bar"><div class="dot"></div>SISTEMA ATIVO</div>
+      <div class="dvr"></div>
+      <span id="clock">00:00:00</span>
+      <div class="dvr"></div>
+      <span class="city-tag">OURO PRETO — MG</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi gold"><div class="kpi-lbl">Permissionários</div><div class="kpi-val" id="kpi-tot">110</div><div class="kpi-sub">Táxis cadastrados</div></div>
+        <div class="kpi green"><div class="kpi-lbl">Regulares</div><div class="kpi-val" id="kpi-reg">0</div><div class="kpi-sub">Documentação em dia</div></div>
+        <div class="kpi red"><div class="kpi-lbl">Irregulares</div><div class="kpi-val" id="kpi-irr">0</div><div class="kpi-sub">Requer ação imediata</div></div>
+        <div class="kpi blue"><div class="kpi-lbl">Fiscalizações</div><div class="kpi-val" id="kpi-fisc">0</div><div class="kpi-sub">Total registrado</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sec-title">⚠️ Irregulares — Prioridade <span>AÇÃO IMEDIATA</span></div>
+          <div id="dash-irr"></div>
+        </div>
+        <div class="card">
+          <div class="sec-title">📋 Fiscalizações Recentes <span>ÚLTIMAS 5</span></div>
+          <div id="dash-rec"></div>
+        </div>
+      </div>
+      <!-- SUGESTOES ESTRATEGICAS -->
+      <div class="card" style="border-color:rgba(201,168,76,.3)">
+        <div class="sec-title">🏛️ Visão Estratégica — OuroTran Smart City <span>ROADMAP</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px">
+          <div style="background:var(--s2);border-radius:var(--r);padding:13px;border-left:3px solid var(--gold)">
+            <div style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.5px;margin-bottom:6px">FASE 1 — AGORA</div>
+            <div style="font-size:12px;color:var(--tx2);line-height:1.7">✅ Sistema digital de fiscalização<br>✅ Notificação WhatsApp em massa<br>✅ Relatório automatizado para Guarda<br>🔄 Integração Google Sheets</div>
+          </div>
+          <div style="background:var(--s2);border-radius:var(--r);padding:13px;border-left:3px solid var(--blue)">
+            <div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:.5px;margin-bottom:6px">FASE 2 — 60 DIAS</div>
+            <div style="font-size:12px;color:var(--tx2);line-height:1.7">📱 App mobile para fiscal em campo<br>📊 Dashboard público transparência<br>🗺️ Integração Google Waze / Maps<br>📧 Notificação por e-mail automática</div>
+          </div>
+          <div style="background:var(--s2);border-radius:var(--r);padding:13px;border-left:3px solid var(--green)">
+            <div style="font-size:11px;font-weight:600;color:var(--green);letter-spacing:.5px;margin-bottom:6px">FASE 3 — 6 MESES</div>
+            <div style="font-size:12px;color:var(--tx2);line-height:1.7">🔗 Integração sistema prefeitura<br>💳 Pagamento de taxas online<br>🤖 IA para priorização de fiscalização<br>📡 QR Code de verificação pública</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERMISSIONARIOS -->
+    <div class="page" id="page-permissionarios">
+      <div class="form-header">
+        <div><div class="form-title">Permissionários</div><div class="form-sub">110 TAXISTAS CADASTRADOS — OURO PRETO</div></div>
+        <div class="btn-group">
+          <select class="fsel" onchange="filterPermStatus(this.value)" id="perm-filter">
+            <option value="">Todos (110)</option>
+            <option value="REGULAR">✅ Regulares</option>
+            <option value="IRREGULAR">❌ Irregulares</option>
+          </select>
+          <button class="btn btn-gold" onclick="showModal('modal-add-perm')">+ Novo</button>
+        </div>
+      </div>
+      <div class="perm-grid" id="perm-grid"></div>
+    </div>
+
+    <!-- FISCALIZACAO -->
+    <div class="page" id="page-fiscalizacao">
+      <div class="form-header">
+        <div><div class="form-title">Nova Fiscalização</div><div class="form-sub">REGISTRO DE ABORDAGEM EM CAMPO</div></div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="clearFisc()">Limpar</button>
+          <button class="btn btn-gold" onclick="salvarFisc()">✔ Registrar</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">Identificação da Abordagem</div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="fd-data"></div>
+          <div class="fg"><label class="fl">Hora</label><input class="fi" type="time" id="fd-hora"></div>
+          <div class="fg"><label class="fl">Permissionário</label><select class="fi" id="fd-perm"><option value="">Selecione...</option></select></div>
+          <div class="fg"><label class="fl">Placa</label><input class="fi" type="text" id="fd-placa" placeholder="ABC-1234" style="text-transform:uppercase"></div>
+          <div class="fg"><label class="fl">Local da Abordagem</label><input class="fi" type="text" id="fd-local" placeholder="Ex: Praça Tiradentes"></div>
+          <div class="fg"><label class="fl">Fiscal Responsável</label><input class="fi" type="text" id="fd-fiscal" placeholder="Seu nome"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">Checklist de Conformidade <span style="margin-left:auto;font-size:11px;color:var(--tx3)">Clique para marcar OK / NOK</span></div>
+        <div class="ck-grid" id="checklist"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">Resultado & Observações</div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Resultado</label>
+            <select class="fi" id="fd-res"><option value="Regular">✅ Regular</option><option value="Irregular">❌ Irregular</option><option value="Autuado">⚠️ Autuado</option></select>
+          </div>
+          <div class="fg full"><label class="fl">Pendências / Irregularidades</label><textarea class="fi" id="fd-pend" rows="3" placeholder="Descreva as irregularidades..."></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="page" id="page-whatsapp">
+      <div class="form-header">
+        <div><div class="form-title">Notificação WhatsApp</div><div class="form-sub">NOTIFICAR TAXISTAS IRREGULARES EM MASSA</div></div>
+        <div class="btn-group">
+          <button class="btn btn-outline btn-sm" onclick="selectAll()">Selecionar Todos</button>
+          <button class="btn btn-wpp" onclick="enviarSelecionados()">📱 Enviar para Selecionados</button>
+        </div>
+      </div>
+      <div class="wpp-st">
+        <div class="wst"><div class="wsv" style="color:var(--red)" id="wst-irr">62</div><div class="wsl">Irregulares</div></div>
+        <div class="wst"><div class="wsv" style="color:var(--gold)" id="wst-tel">0</div><div class="wsl">Com Telefone</div></div>
+        <div class="wst"><div class="wsv" style="color:var(--green)" id="wst-env">0</div><div class="wsl">Notificados Hoje</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">✏️ Mensagem Padrão <span>EDITÁVEL</span></div>
+        <div style="margin-bottom:10px">
+          <textarea class="fi" id="wpp-msg" rows="6" style="font-size:12px;line-height:1.7">Olá *{NOME}*! 👋
+
+A *OuroTran* — Superintendência de Transporte de Ouro Preto informa que seu veículo de placa *{PLACA}* (Ponto: {PONTO}) está com *documentação irregular*.
+
+⚠️ *Situação:* {OBS}
+
+Por favor, regularize sua situação o mais breve possível para evitar *suspensão da permissão*.
+
+Dúvidas: Entre em contato com a OuroTran.
+📍 Prefeitura de Ouro Preto — Setor de Transporte</textarea>
+        </div>
+        <div style="font-size:11px;color:var(--tx3)">Variáveis disponíveis: {NOME} {PLACA} {PONTO} {OBS} — são substituídas automaticamente para cada taxista</div>
+      </div>
+      <div class="card">
+        <div class="sec-title">📋 Taxistas Irregulares <span>SELECIONE PARA NOTIFICAR</span></div>
+        <div class="irr-list" id="irr-list" id="irr-list"></div>
+      </div>
+    </div>
+
+    <!-- GUARDA MUNICIPAL -->
+    <div class="page" id="page-guarda">
+      <div class="form-header">
+        <div><div class="form-title">Relatório — Guarda Municipal</div><div class="form-sub">LISTAGEM DE IRREGULARES PARA FISCALIZAÇÃO DE CAMPO</div></div>
+        <div class="btn-group">
+          <button class="btn btn-blue btn-sm" onclick="exportGuarda()">📋 Exportar PDF/Imprimir</button>
+          <button class="btn btn-wpp btn-sm" onclick="enviarGuardaWpp()">📱 Enviar via WhatsApp</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+          <div style="flex:1;background:var(--s2);border-radius:var(--r);padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--red)" id="g-irr">62</div>
+            <div style="font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Irregulares</div>
+          </div>
+          <div style="flex:1;background:var(--s2);border-radius:var(--r);padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--gold)" id="g-tot">110</div>
+            <div style="font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Total</div>
+          </div>
+          <div style="flex:1;background:var(--s2);border-radius:var(--r);padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--green)" id="g-reg">48</div>
+            <div style="font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Regulares</div>
+          </div>
+          <div style="flex:1;background:var(--s2);border-radius:var(--r);padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--tx)" id="g-data">—</div>
+            <div style="font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Data do Relatório</div>
+          </div>
+        </div>
+        <div style="background:var(--rd);border-radius:var(--r);padding:12px 14px;border-left:3px solid var(--red);margin-bottom:14px">
+          <div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:3px">⚠️ INSTRUÇÃO PARA A GUARDA MUNICIPAL</div>
+          <div style="font-size:12px;color:var(--tx2);line-height:1.6">Os veículos abaixo estão com documentação irregular junto à OuroTran. A Guarda Municipal está autorizada a verificar e impedir a circulação dos veículos identificados até regularização junto ao setor de transporte da Prefeitura de Ouro Preto.</div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Permissionário</th><th>Placa</th><th>Ponto de Táxi</th><th>Telefone</th><th>Situação</th></tr></thead>
+          <tbody id="guarda-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NOTIFICACOES -->
+    <div class="page" id="page-notificacoes">
+      <div class="form-header"><div><div class="form-title">Notificações</div><div class="form-sub">ALERTAS DO SISTEMA</div></div></div>
+      <div id="notif-list"></div>
+    </div>
+
+    <!-- HISTORICO -->
+    <div class="page" id="page-historico">
+      <div class="form-header">
+        <div><div class="form-title">Histórico de Vistorias</div><div class="form-sub">REGISTRO COMPLETO</div></div>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Exportar CSV</button>
+      </div>
+      <div class="card">
+        <div class="tbl-header">
+          <div class="search-box"><span style="color:var(--tx3)">🔍</span><input type="text" placeholder="Buscar por nome ou placa..." oninput="filterHist(this.value)"></div>
+          <select class="fsel" onchange="filterHistStatus(this.value)"><option value="">Todos</option><option value="Regular">Regular</option><option value="Irregular">Irregular</option><option value="Autuado">Autuado</option></select>
+        </div>
+        <table>
+          <thead><tr><th>Data/Hora</th><th>Permissionário</th><th>Placa</th><th>Local</th><th>Pendências</th><th>Resultado</th><th>Ações</th></tr></thead>
+          <tbody id="hist-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Novo Permissionário -->
+<div class="modal-overlay" id="modal-add-perm">
+  <div class="modal">
+    <div class="modal-title">Novo Permissionário <button class="close-btn" onclick="closeModal('modal-add-perm')">✕</button></div>
+    <div class="form-grid">
+      <div class="fg full"><label class="fl">Nome Completo</label><input class="fi" id="np-nome" placeholder="Nome do taxista"></div>
+      <div class="fg"><label class="fl">CPF</label><input class="fi" id="np-cpf" placeholder="000.000.000-00"></div>
+      <div class="fg"><label class="fl">CNH</label><input class="fi" id="np-cnh"></div>
+      <div class="fg"><label class="fl">Nº da Permissão</label><input class="fi" id="np-perm" placeholder="TAX-001"></div>
+      <div class="fg"><label class="fl">Vencimento da Permissão</label><input class="fi" type="date" id="np-vp"></div>
+      <div class="fg"><label class="fl">Placa</label><input class="fi" id="np-placa" placeholder="ABC-1234"></div>
+      <div class="fg"><label class="fl">Modelo do Veículo</label><input class="fi" id="np-modelo"></div>
+      <div class="fg"><label class="fl">Vencimento CRLV</label><input class="fi" type="date" id="np-crlv"></div>
+      <div class="fg"><label class="fl">Vencimento Seguro</label><input class="fi" type="date" id="np-seg"></div>
+      <div class="fg"><label class="fl">Última Vistoria</label><input class="fi" type="date" id="np-vis"></div>
+      <div class="fg"><label class="fl">Telefone (WhatsApp)</label><input class="fi" id="np-tel" placeholder="(31) 99999-9999"></div>
+      <div class="fg"><label class="fl">Ponto de Táxi</label><input class="fi" id="np-ponto" placeholder="Ex: Praça Tiradentes"></div>
+      <div class="fg"><label class="fl">Situação</label>
+        <select class="fi" id="np-sit"><option value="REGULAR">✅ Regular</option><option value="IRREGULAR">❌ Irregular</option></select>
+      </div>
+      <div class="fg full"><label class="fl">Observações</label><input class="fi" id="np-obs" placeholder="Ex: FALTA DOCUMENTAÇÃO 2026"></div>
+    </div>
+    <div class="btn-group" style="margin-top:18px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-perm')">Cancelar</button>
+      <button class="btn btn-gold" onclick="salvarPermissionario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ <span id="toast-msg">OK</span></div>
+
+<script>
+var PERM_DEFAULT = [{"id":1,"nome":"ROSELI MARIA ELANDE","cpf":"","cnh":"","numPerm":"TAX-001","vencPerm":"","placa":"PUL0423","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99608-2746","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2022"},{"id":2,"nome":"FELIPE LUCIANO GUIMARÃES","cpf":"","cnh":"","numPerm":"TAX-002","vencPerm":"","placa":"QQT0I62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99632-5960","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"SELO 2025"},{"id":3,"nome":"AIRTON MOREIRA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-003","vencPerm":"","placa":"PWU7110","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987597758","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2019"},{"id":4,"nome":"ALISON ANDRÉ FERREIRA MACHADO","cpf":"","cnh":"","numPerm":"TAX-004","vencPerm":"","placa":"SHE2F58","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99720-6689","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":5,"nome":"MARCELO SENI ANACLETO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-005","vencPerm":"","placa":"SYY2H78","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99606-4002","ponto":"SARAMENHA/ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2025 - DOCUMENTAÇÃO 2026 OK"},{"id":6,"nome":"ANTÔNIO BRUNO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-006","vencPerm":"","placa":"SHN3B18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999613124","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"DOCUMENTAÇÃO 2026 OK, FALTA SELAR 2026"},{"id":7,"nome":"ANTÔNIO DIMAS MENDES","cpf":"","cnh":"","numPerm":"TAX-007","vencPerm":"","placa":"TEB5C43","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999796118","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":8,"nome":"VALÉRIA MAZON JARDIM","cpf":"","cnh":"","numPerm":"TAX-008","vencPerm":"","placa":"QPX3131","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988248697","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":9,"nome":"ANTÔNIO NOBERTO VIANA","cpf":"","cnh":"","numPerm":"TAX-009","vencPerm":"","placa":"SIY8B85","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987529956","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELO 2025"},{"id":10,"nome":"ANDERSON LUIZ PAIVA XAVIER","cpf":"","cnh":"","numPerm":"TAX-010","vencPerm":"","placa":"TCY4H03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971965642","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":11,"nome":"ROSILDA APARECIDA DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-011","vencPerm":"","placa":"OQR8A02","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99604-9397","ponto":"DISTRITO DE SANTO ANTÔNIO DO SALTO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":12,"nome":"MATEUS ALEX DIAS SILAMI","cpf":"","cnh":"","numPerm":"TAX-012","vencPerm":"","placa":"QMZ7E88","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)98698559","ponto":"DISTRITO DE AMARANTINA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":13,"nome":"BONIFÁCIO MACHADO DE ANDRADE","cpf":"","cnh":"","numPerm":"TAX-013","vencPerm":"","placa":"QXC4I71","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99715-8008","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":14,"nome":"ATAÍDE PEDRO GOMES","cpf":"","cnh":"","numPerm":"TAX-014","vencPerm":"","placa":"SIV6F22","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988629273","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":15,"nome":"BENEDITO JESUS DE OLIVEIRA FILHO","cpf":"","cnh":"","numPerm":"TAX-015","vencPerm":"","placa":"GZQ4023","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99612165","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":16,"nome":"CARLOS GUILHERME DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-016","vencPerm":"","placa":"QNH3B06","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":17,"nome":"CARLOS LINO CARNEIRO","cpf":"","cnh":"","numPerm":"TAX-017","vencPerm":"","placa":"RUX7E72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)97359269","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"SELADO 22/04/2026"},{"id":18,"nome":"CARLOS ROBERTO GOMES MOREIRA","cpf":"","cnh":"","numPerm":"TAX-018","vencPerm":"","placa":"SHG5C77","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611524","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":19,"nome":"CHRISTIAN LUCIANO RODRIGUES RIOGA","cpf":"","cnh":"","numPerm":"TAX-019","vencPerm":"","placa":"QXM8G80","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)982080361","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA ATESTADO MEDICO E CERTIDAO NEGATIVA 2026"},{"id":20,"nome":"ELIO JOSÉ MACIEL","cpf":"","cnh":"","numPerm":"TAX-020","vencPerm":"","placa":"TYV2G41","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999617090","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":21,"nome":"CREUSA XAVIER DANTAS","cpf":"","cnh":"","numPerm":"TAX-021","vencPerm":"","placa":"QOV5572","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":22,"nome":"ARLISSON MENDES MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-022","vencPerm":"","placa":"TYI4G97","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985001096","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":23,"nome":"DAVID FELIPE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-023","vencPerm":"","placa":"SHZ1I83","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997576944","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"CARRO DEU PT - AGUARDANDO VEÍCULO NOVO"},{"id":24,"nome":"ÉDSON VALDIVINO SIQUEIRA","cpf":"","cnh":"","numPerm":"TAX-024","vencPerm":"","placa":"RVF5F95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)991176273","ponto":"DISTRITO RODRIGO SILVA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":25,"nome":"EDUARDO FERNANDO PAILER SIQUEIRA","cpf":"","cnh":"","numPerm":"TAX-025","vencPerm":"","placa":"HLD3400","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE GLAURA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":26,"nome":"EDUARDO HENRIQUE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-026","vencPerm":"","placa":"SIL4I17","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999612409","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":27,"nome":"EDUARDO LOMAS","cpf":"","cnh":"","numPerm":"TAX-027","vencPerm":"","placa":"TMH4C21","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611534","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":28,"nome":"ELBERSON SERRANO ZANETTI","cpf":"","cnh":"","numPerm":"TAX-028","vencPerm":"","placa":"QUB7J69","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997261248","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":29,"nome":"LAURISSE MORAES DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-029","vencPerm":"","placa":"RTU0H89","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)992118037","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":30,"nome":"ANDRE DE PAULA DE SOUSA","cpf":"","cnh":"","numPerm":"TAX-030","vencPerm":"","placa":"TER4B77","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987372459","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":31,"nome":"REGINALDO LUIS VIANA","cpf":"","cnh":"","numPerm":"TAX-031","vencPerm":"","placa":"PUR7401","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987944704","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":32,"nome":"WENDER FLAVIO PEREIRA MARÇAL","cpf":"","cnh":"","numPerm":"TAX-032","vencPerm":"","placa":"QXU5D84","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA ALGUMAS DOCUMENTAÇÃO 2026"},{"id":33,"nome":"GERALDO CAMILO GONÇALVES FILHO","cpf":"","cnh":"","numPerm":"TAX-033","vencPerm":"","placa":"PUX4706","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985302868","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":34,"nome":"GERCY FERREIRA DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-034","vencPerm":"","placa":"HMA9579","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985656910","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":35,"nome":"GERALDO PIO MORAES","cpf":"","cnh":"","numPerm":"TAX-035","vencPerm":"","placa":"QQC5856","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986132386","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":36,"nome":"GILBERTO NOLASCO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-036","vencPerm":"","placa":"TYV8I00","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)994032148","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":37,"nome":"GIUMAR EDERSON MENDES","cpf":"","cnh":"","numPerm":"TAX-037","vencPerm":"","placa":"QQC5B81","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998313680","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":38,"nome":"HAROLDO GOLINELI","cpf":"","cnh":"","numPerm":"TAX-038","vencPerm":"","placa":"SHF2B18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987751705","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":39,"nome":"MAURO LUCIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-039","vencPerm":"","placa":"TEA7D72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE RODRIGO SILVA","situacao":"IRREGULAR","obs":"FALTA ALGUMAS DOCUMENTAÇÃO 2026"},{"id":40,"nome":"IRACI FERNANDES","cpf":"","cnh":"","numPerm":"TAX-040","vencPerm":"","placa":"OPG9502","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":41,"nome":"JADIR ANTÔNIO PEREIRA","cpf":"","cnh":"","numPerm":"TAX-041","vencPerm":"","placa":"QOM9100","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611096","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":42,"nome":"JAIR NOVAIS RODRIGUES","cpf":"","cnh":"","numPerm":"TAX-042","vencPerm":"","placa":"TCQ9J52","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997810156","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":43,"nome":"THIAGO DE DEUS FERNANDES","cpf":"","cnh":"","numPerm":"TAX-043","vencPerm":"","placa":"PWH7281","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998601821","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":44,"nome":"EMANUELLE MARIA CAMARA NOGUEIRA","cpf":"","cnh":"","numPerm":"TAX-044","vencPerm":"","placa":"TCQ2F62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":45,"nome":"MÁRCIO GUEDES DA CUNHA","cpf":"","cnh":"","numPerm":"TAX-045","vencPerm":"","placa":"TDU4F40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)996187232","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"SELADO 2026"},{"id":46,"nome":"GERALDO MAGELA DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-046","vencPerm":"","placa":"TEO7D49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)989048738","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2026"},{"id":47,"nome":"MÔNICA MERCÊS COSTA PAIVA","cpf":"","cnh":"","numPerm":"TAX-047","vencPerm":"","placa":"PZG8H38","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"DOCUMENTAÇÃO REGULAR/SEM SELO 2025"},{"id":48,"nome":"JOSÉ ANTÔNIO BORTOLINI ROMERO","cpf":"","cnh":"","numPerm":"TAX-048","vencPerm":"","placa":"QMY5D52","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999741248","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":49,"nome":"JULIANO ESTANISLAU ARDUINDO BRAGA","cpf":"","cnh":"","numPerm":"TAX-049","vencPerm":"","placa":"OQK9463","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611068","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":50,"nome":"JOSÉ GERALDO PENA","cpf":"","cnh":"","numPerm":"TAX-050","vencPerm":"","placa":"RTX9H49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999262079","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":51,"nome":"JOSÉ JUVENTINO DE FREITAS","cpf":"","cnh":"","numPerm":"TAX-051","vencPerm":"","placa":"","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":52,"nome":"JOSÉ MARIA DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-052","vencPerm":"","placa":"RFU1E68","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997712555","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":53,"nome":"JUSELITO JOSE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-053","vencPerm":"","placa":"SYF2H40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611743","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2026"},{"id":54,"nome":"LAURO AUGUSTO FERNANDES LOPES","cpf":"","cnh":"","numPerm":"TAX-054","vencPerm":"","placa":"PVV2499","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)996604957","ponto":"DISTRITO DE RODRIGO SILVA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":55,"nome":"LUCIANO MAROTTA JARDIM","cpf":"","cnh":"","numPerm":"TAX-055","vencPerm":"","placa":"PZS3B72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999244344","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":56,"nome":"LUCIO MAURO DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-056","vencPerm":"","placa":"QQJ7J76","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987343024","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":57,"nome":"JUSSIMAR LESSA VIEIRA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-057","vencPerm":"","placa":"QUQ8G75","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999427227","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":58,"nome":"LUIS EUGÊNIO MORAES FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-058","vencPerm":"","placa":"RTX6F40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA SELAR"},{"id":59,"nome":"MANOEL CANDIDO DA ROCHA","cpf":"","cnh":"","numPerm":"TAX-059","vencPerm":"","placa":"TCS2G18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999965523","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":60,"nome":"MARCELO RAIMUNDO BARBOSA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-060","vencPerm":"","placa":"QZL8D64","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986418073","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":61,"nome":"MARINALVA GRACIOLI NEVES MATOS","cpf":"","cnh":"","numPerm":"TAX-061","vencPerm":"","placa":"QXD6123","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986297743","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":62,"nome":"MARCIO AUGUSTO FERREIRA RAMOS","cpf":"","cnh":"","numPerm":"TAX-062","vencPerm":"","placa":"PYA3297","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999955704","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":63,"nome":"MARIA LUIZA COELHO FREITAS","cpf":"","cnh":"","numPerm":"TAX-063","vencPerm":"","placa":"QXF9883","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987363808","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":64,"nome":"MARCOS ANTÔNIO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-064","vencPerm":"","placa":"TD6I30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985018641","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"IRREGULAR","obs":"EXAME MEDICO VENCIDO"},{"id":65,"nome":"MARIA DAS GRAÇAS QUIRINO SOUZA","cpf":"","cnh":"","numPerm":"TAX-065","vencPerm":"","placa":"PZM4777","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":66,"nome":"MARIA HELENA VENANCIA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-066","vencPerm":"","placa":"SIA8G90","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985294768","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":67,"nome":"MARIO ANTONIO MOREIRA","cpf":"","cnh":"","numPerm":"TAX-067","vencPerm":"","placa":"SIH0J73","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)982659229","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":68,"nome":"MAURILIO JOSÉ DA SILVA","cpf":"","cnh":"","numPerm":"TAX-068","vencPerm":"","placa":"TXB0B95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999614665","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":69,"nome":"DANIELLE CRISTINA TEIXEIRA","cpf":"","cnh":"","numPerm":"TAX-069","vencPerm":"","placa":"QWS6192","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99617091","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":70,"nome":"LISIA MAGNA BARBOSA MOURA","cpf":"","cnh":"","numPerm":"TAX-070","vencPerm":"","placa":"SHL8J03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987423973","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":71,"nome":"DIMAS DOS SANTOS ARAÚJO","cpf":"","cnh":"","numPerm":"TAX-071","vencPerm":"","placa":"TWYSB18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997771721","ponto":"CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":72,"nome":"JOSIOMAR APARECIDO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-072","vencPerm":"","placa":"RMJ7E13","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":73,"nome":"ALAN MAPA ALVES","cpf":"","cnh":"","numPerm":"TAX-073","vencPerm":"","placa":"RVM3A50","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985008253","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":74,"nome":"WASHINGTON NONATO COELHO","cpf":"","cnh":"","numPerm":"TAX-074","vencPerm":"","placa":"TEE1H11","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997655676","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":75,"nome":"OSMAR CLAUDIO MARTINS","cpf":"","cnh":"","numPerm":"TAX-075","vencPerm":"","placa":"PXN1447","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988133663","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":76,"nome":"OTAIR RIBEIRO GOMES","cpf":"","cnh":"","numPerm":"TAX-076","vencPerm":"","placa":"QQA7H51","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999095676","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":77,"nome":"PATRICIA DO CARMO","cpf":"","cnh":"","numPerm":"TAX-077","vencPerm":"","placa":"SHF7B30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988468700","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":78,"nome":"WANDER ANACLETO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-078","vencPerm":"","placa":"PWC7654","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESARIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":79,"nome":"VALTENIR ELIZEU DA ROCHA","cpf":"","cnh":"","numPerm":"TAX-079","vencPerm":"","placa":"RVL7F87","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971684468","ponto":"DISTRITO DE GLAURA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":80,"nome":"ANTÔNIO CARLOS DA SILVA","cpf":"","cnh":"","numPerm":"TAX-080","vencPerm":"","placa":"QXV2G95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998047526","ponto":"DISTRITO SANTO ANTONIO DO LEITE","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":81,"nome":"MARINA DOS SANTOS MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-081","vencPerm":"","placa":"TDE8E87","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986414586","ponto":"BAUXITA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":82,"nome":"RICARDO DE MAGALHÃES GOMES","cpf":"","cnh":"","numPerm":"TAX-082","vencPerm":"","placa":"RFP2H46","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986025601","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":83,"nome":"RENILTON DOS REIS","cpf":"","cnh":"","numPerm":"TAX-083","vencPerm":"","placa":"QND6C49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"AGUARDANDO TROCA DE PLACA"},{"id":84,"nome":"LÍRIA CLARA RIBAS","cpf":"","cnh":"","numPerm":"TAX-084","vencPerm":"","placa":"RNW6I08","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987120760","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":85,"nome":"ROBERTO NASCIMENTO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-085","vencPerm":"","placa":"RMD2C48","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611818","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":86,"nome":"ROBSON WASHINGTON DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-086","vencPerm":"","placa":"QUH4068","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESARIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":87,"nome":"MARIA RAQUEL PEDROSA XAVIER","cpf":"","cnh":"","numPerm":"TAX-087","vencPerm":"","placa":"RUR2F30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998666303","ponto":"DISTRITO DE GLAURA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":88,"nome":"SEBASTIÃO APARECIDO QUIRINO","cpf":"","cnh":"","numPerm":"TAX-088","vencPerm":"","placa":"PZV7479","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998071821","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":89,"nome":"SEBASTIÃO GREGÓRIO DA CRUZ","cpf":"","cnh":"","numPerm":"TAX-089","vencPerm":"","placa":"QNA1941","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986077688","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":90,"nome":"VANDERLEI MARCIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-090","vencPerm":"","placa":"RFV4H18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999438409","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":91,"nome":"JULIARD HENRIQUE A DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-091","vencPerm":"","placa":"RVE8I20","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"PERMISSIONARIO NOVO - PEDIR DOCS"},{"id":92,"nome":"SILVIO BARBOSA XAVIER","cpf":"","cnh":"","numPerm":"TAX-092","vencPerm":"","placa":"QNU4667","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971256072","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":93,"nome":"SUELI BASILIO DA CONCEIÇÃO","cpf":"","cnh":"","numPerm":"TAX-093","vencPerm":"","placa":"RTR6I24","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997158008","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"TROCA DE PERMISSIONARIO FALECIDO"},{"id":94,"nome":"MARIO COELHO DE MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-094","vencPerm":"","placa":"RNE7G14","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997897772","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":95,"nome":"TULIO PETERSON DO NASCIMENTO","cpf":"","cnh":"","numPerm":"TAX-095","vencPerm":"","placa":"PPX5B41","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)989891518","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":96,"nome":"VALDOMIRO DONATO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-096","vencPerm":"","placa":"QXJ0445","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)984402706","ponto":"DISTRITO AMARANTINA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":97,"nome":"VALTER EVANGELISTA SEVERO","cpf":"","cnh":"","numPerm":"TAX-097","vencPerm":"","placa":"HBG8979","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999270011","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":98,"nome":"VANDERLEI GOMES MOREIRA","cpf":"","cnh":"","numPerm":"TAX-098","vencPerm":"","placa":"QXH1H03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611107","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":99,"nome":"LUIS FLAVIO GONÇALVES ROCHA","cpf":"","cnh":"","numPerm":"TAX-099","vencPerm":"","placa":"QPR4201","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998025788","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":100,"nome":"VICENTE DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-100","vencPerm":"","placa":"TCM2E46","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971411813","ponto":"DISTRITO SANTO ANTONIO DO SALTO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":101,"nome":"RONAN LIMA FRANCO","cpf":"","cnh":"","numPerm":"TAX-101","vencPerm":"","placa":"RUB5E92","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":102,"nome":"EDERSON SERRANO ZANETTI","cpf":"","cnh":"","numPerm":"TAX-102","vencPerm":"","placa":"QXP1C00","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985102140","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":103,"nome":"DARINALDO SANTANA TOMAZ","cpf":"","cnh":"","numPerm":"TAX-103","vencPerm":"","placa":"TZA3B03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999430682","ponto":"CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"SELADO 28/04/2026"},{"id":104,"nome":"WALTER HILARIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-104","vencPerm":"","placa":"RVE8G32","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611798","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":105,"nome":"ADAIR DE PAULA DAS FLORES","cpf":"","cnh":"","numPerm":"TAX-105","vencPerm":"","placa":"QQT0I62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99632-5960","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK"},{"id":106,"nome":"WALISSON MARTINS","cpf":"","cnh":"","numPerm":"TAX-106","vencPerm":"","placa":"","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985970143","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"IRREGULAR","obs":"FALTA TODA DOCUMENTAÇÃO DESDE 2025"},{"id":107,"nome":"WILBERT GUIMARÃES DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-107","vencPerm":"","placa":"QUX2B57","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971299498","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":108,"nome":"JOÃO ANTONIO DA COSTA","cpf":"","cnh":"","numPerm":"TAX-108","vencPerm":"","placa":"SHP8G08","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999430682","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"DOCUMENTOS OK, FALTA AGENDAR PARA SELAR"},{"id":109,"nome":"JOSÉ DAS GRAÇAS NOVAIS","cpf":"","cnh":"","numPerm":"TAX-109","vencPerm":"","placa":"TXM0J93","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999606162","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":110,"nome":"TIAGO VINICIUS GONÇALVES","cpf":"","cnh":"","numPerm":"TAX-110","vencPerm":"","placa":"PYY2393","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)992340952","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"}];
+
+var CK_ITEMS = ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatorio', 'Identificacao visual (taxi)', 'Taximetro lacrado e calibrado', 'Higiene do veiculo', 'Extintor de incendio', 'Colete / cracha', 'Camera de seguranca'];
+var checkStates = {};
+var histFilter = { text: '', status: '' };
+var permissionarios = JSON.parse(localStorage.getItem('perm') || 'null') || JSON.parse(JSON.stringify(PERM_DEFAULT));
+var fiscalizacoes = JSON.parse(localStorage.getItem('fisc') || '[]');
+var wppEnviados = JSON.parse(localStorage.getItem('wppEnv') || '[]');
+var MSG_PADRAO = "Ola *{NOME}*!\n\nA *OuroTran* - Superintendencia de Transporte de Ouro Preto informa que seu veiculo de placa *{PLACA}* (Ponto: {PONTO}) esta com *documentacao irregular*.\n\nSituacao: {OBS}\n\nPor favor, regularize sua situacao o mais breve possivel para evitar *suspensao da permissao*.\n\nDuvidas: Entre em contato com a OuroTran.\nPrefeitura de Ouro Preto - Setor de Transporte";
+
+function save() { localStorage.setItem('perm', JSON.stringify(permissionarios)); localStorage.setItem('fisc', JSON.stringify(fiscalizacoes)); localStorage.setItem('wppEnv', JSON.stringify(wppEnviados)); }
+
+document.querySelectorAll('.nav-item[data-page]').forEach(function(el) {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    el.classList.add('active');
+    var pg = el.dataset.page;
+    document.getElementById('page-' + pg).classList.add('active');
+    var titles = { dashboard: ['Dashboard', 'VISAO GERAL'], permissionarios: ['Permissionarios', '110 TAXISTAS'], fiscalizacao: ['Nova Fiscalizacao', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATORIO DE IRREGULARES'], notificacoes: ['Notificacoes', 'ALERTAS'], historico: ['Historico', 'REGISTRO COMPLETO'] };
+    var t = titles[pg] || [pg, ''];
+    document.getElementById('ttl').textContent = t[0];
+    document.getElementById('sub').textContent = t[1];
+    if (pg === 'dashboard') updateDash();
+    if (pg === 'permissionarios') renderPerm();
+    if (pg === 'fiscalizacao') { renderCK(); updateFiscSel(); }
+    if (pg === 'whatsapp') renderWpp();
+    if (pg === 'guarda') renderGuarda();
+    if (pg === 'notificacoes') renderNotif();
+    if (pg === 'historico') renderHist();
+  });
+});
+
+document.getElementById('nav-csv').addEventListener('click', exportCSV);
+document.getElementById('nav-guarda').addEventListener('click', exportGuarda);
+document.getElementById('btn-csv').addEventListener('click', exportCSV);
+// filtros via event delegation abaixo
+
+function showModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg) { document.getElementById('toast-msg').textContent = msg; var t = document.getElementById('toast'); t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 3000); }
+function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR'); }
+setInterval(tick, 1000); tick();
+function fmtD(s) { if (!s) return '—'; var p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function isIrr(p) { return p.situacao === 'IRREGULAR'; }
+function getIrr() { return permissionarios.filter(function(x) { return x.situacao === 'IRREGULAR'; }); }
+function cleanTel(t) { return t ? t.replace(/[^0-9]/g, '') : ''; }
+
+function updateDash() {
+  var irrList = getIrr();
+  var regCnt = permissionarios.length - irrList.length;
+  document.getElementById('kpi-tot').textContent = permissionarios.length;
+  document.getElementById('kpi-reg').textContent = regCnt;
+  document.getElementById('kpi-irr').textContent = irrList.length;
+  document.getElementById('kpi-fisc').textContent = fiscalizacoes.length;
+  document.getElementById('b-wpp').textContent = irrList.length;
+  document.getElementById('b-guard').textContent = irrList.length;
+  document.getElementById('b-notif').textContent = irrList.length;
+  var di = document.getElementById('dash-irr');
+  var out = '';
+  var slice6 = irrList.slice(0, 6);
+  for (var i = 0; i < slice6.length; i++) {
+    var p = slice6[i];
+    out += '<div class="ai"><div><div class="an">' + p.nome + '</div><div class="ad">' + (p.ponto || '—') + ' · ' + (p.placa || 'sem placa') + '</div></div><span class="atag">IRREGULAR</span></div>';
+  }
+  if (irrList.length > 6) out += '<div style="font-size:11px;color:var(--tx3);text-align:center;margin-top:8px">+' + (irrList.length - 6) + ' mais irregulares</div>';
+  if (!irrList.length) out = '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px">Nenhum irregular</div>';
+  di.innerHTML = out;
+  var dr = document.getElementById('dash-rec');
+  var rec = fiscalizacoes.slice().reverse().slice(0, 5);
+  if (!rec.length) { dr.innerHTML = '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px">Nenhuma fiscalizacao registrada</div>'; return; }
+  var out2 = '';
+  for (var j = 0; j < rec.length; j++) {
+    var f = rec[j];
+    var cls = f.resultado === 'Regular' ? 'ok' : f.resultado === 'Autuado' ? 'amb' : 'nok';
+    var ic = f.resultado === 'Regular' ? '✓' : '!';
+    var pcls = f.resultado === 'Regular' ? 'regular' : f.resultado === 'Autuado' ? 'autuado' : 'irregular';
+    out2 += '<div class="ri"><div class="ric ' + cls + '">' + ic + '</div><div><div style="font-size:12px;font-weight:500">' + f.permissionario + '</div><div style="font-size:11px;color:var(--tx2)">' + (f.placa || '—') + '</div></div><div style="margin-left:auto;font-size:11px;color:var(--tx3)">' + fmtD(f.data) + '</div><span class="pill ' + pcls + '">' + f.resultado + '</span></div>';
+  }
+  dr.innerHTML = out2;
+}
+
+function renderPerm() {
+  var filter = document.getElementById('perm-filter').value;
+  var list = filter ? permissionarios.filter(function(p) { return p.situacao === filter; }) : permissionarios;
+  var grid = document.getElementById('perm-grid');
+  if (!list.length) { grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;grid-column:1/-1;text-align:center;padding:40px">Nenhum resultado</div>'; return; }
+  var out = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var ini = p.nome.split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('');
+    var irr2 = isIrr(p);
+    var telOk = cleanTel(p.tel).length >= 10;
+    out += '<div class="perm-card ' + (irr2 ? 'irr-card' : '') + '">';
+    out += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+    out += '<div class="avatar ' + (irr2 ? 'irr' : 'reg') + '">' + ini + '</div>';
+    out += '<div><div class="pname">' + p.nome + '</div><div class="pnum">' + p.numPerm + '</div></div></div>';
+    out += '<div class="pdet">&#128663; <strong>' + (p.placa || 'sem placa') + '</strong></div>';
+    out += '<div class="pdet">&#128205; ' + (p.ponto || '—') + '</div>';
+    out += '<div class="pdet">&#128241; ' + (p.tel || '—') + '</div>';
+    if (p.obs) out += '<div class="pobs">' + p.obs + '</div>';
+    out += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">';
+    out += '<span class="pst ' + (irr2 ? 'irr' : 'ok') + '">' + (irr2 ? 'IRREGULAR' : 'REGULAR') + '</span>';
+    if (telOk && irr2) out += '<button class="btn btn-wpp btn-sm" onclick="wppUnico(' + p.id + ')">WPP</button>';
+    out += '</div></div>';
+  }
+  grid.innerHTML = out;
+}
+
+function salvarPerm() {
+  var nome = document.getElementById('np-nome').value.trim();
+  if (!nome) { alert('Informe o nome'); return; }
+  var p = { id: Date.now(), nome: nome, cpf: document.getElementById('np-cpf').value, cnh: document.getElementById('np-cnh').value, numPerm: document.getElementById('np-perm').value || ('TAX-' + String(permissionarios.length + 1).padStart(3, '0')), vencPerm: '', placa: document.getElementById('np-placa').value.toUpperCase(), modelo: document.getElementById('np-modelo').value, crlv: '', seguro: '', vistoria: '', tel: document.getElementById('np-tel').value, ponto: document.getElementById('np-ponto').value, situacao: document.getElementById('np-sit').value, obs: document.getElementById('np-obs').value };
+  permissionarios.push(p); save(); closeModal('modal-add'); renderPerm(); updateDash(); showToast('Permissionario cadastrado!');
+}
+
+function renderCK() {
+  var out = '';
+  for (var i = 0; i < CK_ITEMS.length; i++) {
+    var st = checkStates[i] || '';
+    var mark = st === 'ok' ? '✓' : st === 'nok' ? '✕' : '';
+    out += '<div class="ck-item ' + st + '" onclick="toggleCK(' + i + ')"><div class="ck-box">' + mark + '</div><div class="ck-lbl">' + CK_ITEMS[i] + '</div></div>';
+  }
+  document.getElementById('checklist').innerHTML = out;
+  var now = new Date();
+  document.getElementById('fd-data').value = now.toISOString().slice(0, 10);
+  document.getElementById('fd-hora').value = now.toTimeString().slice(0, 5);
+}
+function toggleCK(i) { var cur = checkStates[i]; checkStates[i] = !cur ? 'ok' : cur === 'ok' ? 'nok' : ''; renderCK(); }
+
+function updateFiscSel() {
+  var opts = '<option value="">Selecione...</option>';
+  for (var i = 0; i < permissionarios.length; i++) {
+    var p = permissionarios[i];
+    opts += '<option value="' + p.id + '">' + p.nome + ' — ' + (p.placa || 'sem placa') + (isIrr(p) ? ' [IRREGULAR]' : '') + '</option>';
+  }
+  var sel = document.getElementById('fd-perm');
+  sel.innerHTML = opts;
+  sel.onchange = function() { var p = permissionarios.filter(function(x) { return x.id == sel.value; })[0]; if (p) document.getElementById('fd-placa').value = p.placa || ''; };
+}
+
+function salvarFisc() {
+  var permId = document.getElementById('fd-perm').value;
+  var data = document.getElementById('fd-data').value;
+  if (!permId || !data) { alert('Informe o permissionario e a data'); return; }
+  var pObj = permissionarios.filter(function(p) { return p.id == permId; })[0];
+  var nok = [];
+  for (var i = 0; i < CK_ITEMS.length; i++) { if (checkStates[i] === 'nok') nok.push(CK_ITEMS[i]); }
+  fiscalizacoes.push({ id: Date.now(), data: data, hora: document.getElementById('fd-hora').value, permissionario: pObj ? pObj.nome : permId, permissao: pObj ? pObj.numPerm : '—', placa: document.getElementById('fd-placa').value.toUpperCase(), local: document.getElementById('fd-local').value, fiscal: document.getElementById('fd-fiscal').value, resultado: document.getElementById('fd-res').value, pendencias: document.getElementById('fd-pend').value || (nok.length ? nok.join(', ') : 'Nenhuma') });
+  save(); showToast('Fiscalizacao registrada!'); clearFisc(); renderHist(); updateDash();
+}
+function clearFisc() { checkStates = {}; ['fd-perm','fd-placa','fd-local','fd-fiscal','fd-pend'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('fd-res').value = 'Regular'; renderCK(); }
+
+function buildMsg(p) { return document.getElementById('wpp-msg').value.replace(/{NOME}/g, p.nome).replace(/{PLACA}/g, p.placa || 'sem placa').replace(/{PONTO}/g, p.ponto || '—').replace(/{OBS}/g, p.obs || 'Documentacao irregular'); }
+
+function wppUnico(id) {
+  var p = permissionarios.filter(function(x) { return x.id == id; })[0];
+  if (!p) return;
+  var tel = cleanTel(p.tel);
+  if (tel.length < 10) { showToast('Telefone invalido'); return; }
+  window.open('https://wa.me/55' + tel + '?text=' + encodeURIComponent(buildMsg(p)), '_blank');
+  if (wppEnviados.indexOf(p.nome) === -1) { wppEnviados.push(p.nome); save(); }
+  document.getElementById('wst-env').textContent = wppEnviados.length;
+  showToast('WhatsApp aberto para ' + p.nome);
+}
+
+function renderWpp() {
+  var irrList = getIrr();
+  var comTel = irrList.filter(function(p) { return cleanTel(p.tel).length >= 10; }).length;
+  document.getElementById('wst-irr').textContent = irrList.length;
+  document.getElementById('wst-tel').textContent = comTel;
+  document.getElementById('wst-env').textContent = wppEnviados.length;
+  if (!document.getElementById('wpp-msg').value) document.getElementById('wpp-msg').value = MSG_PADRAO;
+  var out = '';
+  for (var i = 0; i < irrList.length; i++) {
+    var p = irrList[i];
+    var telOk = cleanTel(p.tel).length >= 10;
+    var jaEnv = wppEnviados.indexOf(p.nome) !== -1;
+    out += '<div class="irr-item">';
+    out += '<div class="ichk ' + (jaEnv ? 'on' : '') + '" id="chk-' + i + '" onclick="this.classList.toggle(\'on\')">&#10003;</div>';
+    out += '<div style="flex:1;min-width:0">';
+    out += '<div style="font-size:12px;font-weight:500">' + p.nome + '</div>';
+    out += '<div style="font-size:11px;color:var(--tx2)">' + (p.placa || 'sem placa') + ' · ' + (p.tel || 'sem telefone') + '</div>';
+    out += '<div style="font-size:10px;color:var(--tx3);font-style:italic">' + (p.obs || '') + '</div>';
+    out += '</div>';
+    if (telOk) out += '<button class="btn btn-wpp btn-sm" style="flex-shrink:0" onclick="wppUnico(' + p.id + ')">WPP</button>';
+    else out += '<span style="font-size:11px;color:var(--tx3)">sem tel</span>';
+    out += '</div>';
+  }
+  document.getElementById('irr-list').innerHTML = out;
+}
+
+function selectAll() { document.querySelectorAll('.ichk').forEach(function(el) { el.classList.add('on'); }); }
+
+function enviarSelecionados() {
+  var irrList = getIrr();
+  var sel = irrList.filter(function(p, i) { var el = document.getElementById('chk-' + i); return el && el.classList.contains('on') && cleanTel(p.tel).length >= 10; });
+  if (!sel.length) { showToast('Nenhum selecionado com telefone valido'); return; }
+  showToast('Abrindo ' + sel.length + ' conversas...');
+  for (var i = 0; i < sel.length; i++) {
+    (function(p, delay) { setTimeout(function() { window.open('https://wa.me/55' + cleanTel(p.tel) + '?text=' + encodeURIComponent(buildMsg(p)), '_blank'); if (wppEnviados.indexOf(p.nome) === -1) wppEnviados.push(p.nome); }, delay); })(sel[i], i * 1500);
+  }
+  setTimeout(function() { save(); renderWpp(); }, sel.length * 1500 + 500);
+}
+
+function renderGuarda() {
+  var irrList = getIrr();
+  document.getElementById('g-irr').textContent = irrList.length;
+  document.getElementById('g-tot').textContent = permissionarios.length;
+  document.getElementById('g-reg').textContent = permissionarios.length - irrList.length;
+  document.getElementById('g-data').textContent = fmtD(new Date().toISOString().slice(0, 10));
+  var out = '';
+  for (var i = 0; i < irrList.length; i++) {
+    var p = irrList[i];
+    out += '<tr><td style="color:var(--tx3);font-weight:600">' + String(i + 1).padStart(2, '0') + '</td><td><strong>' + p.nome + '</strong></td><td><span class="placa">' + (p.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + (p.ponto || '—') + '</td><td style="font-size:12px">' + (p.tel || '—') + '</td><td><span class="pill irregular">IRREGULAR</span></td></tr>';
+  }
+  document.getElementById('guarda-table').innerHTML = out;
+}
+
+function exportGuarda() {
+  var irrList = getIrr();
+  var hoje = new Date().toLocaleDateString('pt-BR');
+  var linhas = '';
+  for (var i = 0; i < irrList.length; i++) {
+    var p = irrList[i];
+    linhas += String(i+1).padStart(2,'0') + ' | ' + p.nome + ' | ' + (p.placa||'—') + ' | ' + (p.ponto||'—') + ' | ' + (p.tel||'—') + ' | IRREGULAR | ' + (p.obs||'') + '\n';
+  }
+  var txt = 'OUROTRAN - RELATORIO GUARDA MUNICIPAL\nData: ' + hoje + '\nTotal Irregulares: ' + irrList.length + '\n' + '================================================================================\n' + linhas;
+  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'ourotran_guarda_' + hoje.replace(/\//g, '-') + '.txt'; a.click();
+  showToast('Relatorio exportado!');
+}
+
+function enviarGuardaWpp() {
+  var irrList = getIrr();
+  var hoje = new Date().toLocaleDateString('pt-BR');
+  var lista = '';
+  for (var i = 0; i < Math.min(irrList.length, 50); i++) {
+    var p = irrList[i];
+    lista += String(i+1).padStart(2,'0') + '. ' + p.nome + ' - ' + (p.placa||'sem placa') + ' - ' + (p.ponto||'—') + '\n';
+  }
+  var msg = 'OUROTRAN - Relatorio Guarda Municipal\nData: ' + hoje + '\nIrregulares: ' + irrList.length + '\n\n' + lista;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  showToast('Relatorio enviado!');
+}
+
+function renderNotif() {
+  var irrList = getIrr();
+  var comTel = irrList.filter(function(p){ return cleanTel(p.tel).length >= 10; });
+  var out = '';
+
+  if (irrList.length) {
+    out += '<div class="notif-item v" style="align-items:flex-start;flex-direction:column;gap:14px">';
+    out += '<div style="display:flex;align-items:center;gap:12px;width:100%">';
+    out += '<div style="font-size:18px">🔴</div>';
+    out += '<div style="flex:1"><div style="font-size:13px;font-weight:500">' + irrList.length + ' permissionarios irregulares</div>';
+    out += '<div style="font-size:12px;color:var(--tx2);margin-top:2px">' + comTel.length + ' com telefone cadastrado — prontos para notificar</div></div>';
+    out += '<button class="btn btn-wpp btn-sm" onclick="notifEnviarTodos()">📱 Notificar Todos via WhatsApp</button>';
+    out += '</div>';
+    out += '<div style="width:100%;display:flex;flex-direction:column;gap:7px;max-height:400px;overflow-y:auto">';
+    for (var i = 0; i < irrList.length; i++) {
+      var p = irrList[i];
+      var telOk = cleanTel(p.tel).length >= 10;
+      out += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s3);border-radius:6px">';
+      out += '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">' + p.nome + '</div>';
+      out += '<div style="font-size:11px;color:var(--tx2)">' + (p.placa||'sem placa') + ' · ' + (p.ponto||'—') + '</div>';
+      out += '<div style="font-size:10px;color:var(--tx3);font-style:italic">' + (p.obs||'') + '</div></div>';
+      if (telOk) out += '<button class="btn btn-wpp btn-sm" onclick="wppUnico(' + p.id + ')">📱 Enviar</button>';
+      else out += '<span style="font-size:10px;color:var(--tx3);padding:4px 8px">sem tel</span>';
+      out += '</div>';
+    }
+    out += '</div></div>';
+  }
+
+  if (fiscalizacoes.length) {
+    out += '<div class="notif-item ok" style="margin-top:10px"><div style="font-size:18px">✅</div><div><div style="font-size:13px;font-weight:500">' + fiscalizacoes.length + ' fiscalizacao(es) registrada(s)</div><div style="font-size:12px;color:var(--tx2)">Acesse Historico para ver detalhes</div></div></div>';
+  }
+
+  if (!out) out = '<div style="color:var(--tx3);font-size:13px;text-align:center;padding:40px">Sem alertas criticos no momento</div>';
+  document.getElementById('notif-list').innerHTML = out;
+}
+
+function notifEnviarTodos() {
+  var irrList = getIrr().filter(function(p){ return cleanTel(p.tel).length >= 10; });
+  if (!irrList.length) { showToast('Nenhum irregular com telefone valido'); return; }
+  showToast('Abrindo ' + irrList.length + ' conversas no WhatsApp...');
+  for (var i = 0; i < irrList.length; i++) {
+    (function(p, delay){
+      setTimeout(function(){
+        window.open('https://wa.me/55' + cleanTel(p.tel) + '?text=' + encodeURIComponent(buildMsg(p)), '_blank');
+        if (wppEnviados.indexOf(p.nome) === -1) wppEnviados.push(p.nome);
+      }, delay);
+    })(irrList[i], i * 1500);
+  }
+  setTimeout(function(){ save(); renderNotif(); }, irrList.length * 1500 + 500);
+}
+
+function renderHist() {
+  var list = fiscalizacoes.filter(function(f) {
+    var txt = histFilter.text.toLowerCase();
+    var mt = !txt || f.permissionario.toLowerCase().indexOf(txt) !== -1 || (f.placa || '').toLowerCase().indexOf(txt) !== -1;
+    var ms = !histFilter.status || f.resultado === histFilter.status;
+    return mt && ms;
+  });
+  var tb = document.getElementById('hist-table');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="7"><div class="empty">Nenhuma fiscalizacao registrada</div></td></tr>'; return; }
+  var out = '';
+  var rows = list.slice().reverse();
+  for (var i = 0; i < rows.length; i++) {
+    var f = rows[i];
+    var pcls = f.resultado === 'Regular' ? 'regular' : f.resultado === 'Autuado' ? 'autuado' : 'irregular';
+    out += '<tr><td>' + fmtD(f.data) + '<br><span style="color:var(--tx3);font-size:11px">' + (f.hora||'') + '</span></td><td><strong>' + f.permissionario + '</strong></td><td><span class="placa">' + (f.placa||'—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + (f.local||'—') + '</td><td style="font-size:11px;color:var(--tx2)">' + (f.pendencias||'—') + '</td><td><span class="pill ' + pcls + '">' + f.resultado + '</span></td><td><button class="btn btn-red btn-sm" onclick="delFisc(' + f.id + ')">X</button></td></tr>';
+  }
+  tb.innerHTML = out;
+}
+function delFisc(id) { if (!confirm('Excluir?')) return; fiscalizacoes = fiscalizacoes.filter(function(f) { return f.id !== id; }); save(); renderHist(); updateDash(); }
+
+function exportCSV() {
+  var header = ['Data','Hora','Permissionario','Permissao','Placa','Local','Fiscal','Pendencias','Resultado'];
+  var lines = [];
+  lines.push(header.map(function(c){ return '"'+c+'"'; }).join(';'));
+  for (var i = 0; i < fiscalizacoes.length; i++) {
+    var f = fiscalizacoes[i];
+    var row = [f.data, f.hora||'', f.permissionario, f.permissao||'', f.placa||'', f.local||'', f.fiscal||'', f.pendencias||'', f.resultado];
+    lines.push(row.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(';'));
+  }
+  var csv = lines.join(String.fromCharCode(13,10));
+  var blob = new Blob([String.fromCharCode(0xFEFF) + csv], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'ourotran_historico.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exportado!');
+}
+
+function filterPermStatus(val) {
+  document.getElementById('perm-filter').value = val;
+  renderPerm();
+}
+
+// Event delegation para filtros — garante que elementos existam
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'perm-filter') { renderPerm(); }
+  if (e.target.id === 'hist-filter') { histFilter.status = e.target.value; renderHist(); }
+});
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'hist-search') { histFilter.text = e.target.value; renderHist(); }
+});
+
+updateDash();
+document.getElementById('b-perm').textContent = permissionarios.length;
+
+</script>
+</body>
+</html>
