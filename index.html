@@ -728,7 +728,10 @@ async function criarAcesso() {
   loginMsg('Criando acesso...');
   var r = await sb.auth.signUp({ email: c.email, password: c.password, options: { emailRedirectTo: urlApp() } });
   if (r.error) { loginMsg(traduzErro(r.error), true); return; }
-  if (!r.data.session) loginMsg('Enviamos um link de confirmação para ' + c.email + '. Abra o e-mail, clique no link e depois entre aqui com a senha que você escolheu.');
+  // para e-mail já cadastrado o Supabase não dá erro: devolve o usuário sem identidades e não envia e-mail
+  var jaExiste = r.data.user && r.data.user.identities && !r.data.user.identities.length;
+  if (jaExiste) loginMsg('Esse e-mail já tem cadastro. Clique em "Entrar" (ou em "Esqueci a senha").', true);
+  else if (!r.data.session) loginMsg('Enviamos um link de confirmação para ' + c.email + '. Abra o e-mail, clique no link e depois entre aqui com a senha que você escolheu.');
 }
 async function esqueciSenha() {
   var c = credenciais(); if (!c) return;
