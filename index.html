@@ -238,6 +238,19 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
 .user-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 .user-line span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.busy,body.busy *{cursor:progress!important}
+
+/* MODO GUARDA: só consulta de irregulares */
+body.modo-guarda .so-admin{display:none!important}
+.g-busca{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.g-busca .search-box{flex:1}
+.g-busca input{font-size:16px;letter-spacing:1px;text-transform:uppercase}
+.g-resultado{padding:14px 16px;border-radius:var(--r);margin-bottom:14px;font-size:14px;font-weight:600;border-left:3px solid}
+.g-resultado.irr{background:var(--rd);color:var(--red);border-color:var(--red)}
+.g-resultado.ok{background:var(--gn);color:var(--green);border-color:var(--green)}
+
+/* USUÁRIOS */
+.usr-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px}
+.usr-email{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -278,31 +291,32 @@ body.busy,body.busy *{cursor:progress!important}
     <div class="status-bar"><div class="dot"></div>SISTEMA ATIVO — OURO PRETO / MG</div>
   </div>
   <nav>
-    <div class="nav-sec">
+    <div class="nav-sec so-admin">
       <div class="nav-lbl">Painel</div>
       <button class="nav-item active" data-page="dashboard">◈ Dashboard</button>
     </div>
-    <div class="nav-sec">
+    <div class="nav-sec so-admin">
       <div class="nav-lbl">Cadastros</div>
       <button class="nav-item" data-page="permissionarios">👤 Permissionários <span class="badge" id="b-perm"></span></button>
     </div>
     <div class="nav-sec">
       <div class="nav-lbl">Operações</div>
-      <button class="nav-item" data-page="fiscalizacao">🔍 Fiscalização</button>
-      <button class="nav-item" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp"></span></button>
+      <button class="nav-item so-admin" data-page="fiscalizacao">🔍 Fiscalização</button>
+      <button class="nav-item so-admin" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp"></span></button>
       <button class="nav-item" data-page="guarda">🛡️ Guarda Municipal <span class="badge red" id="b-guard"></span></button>
-      <button class="nav-item" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif"></span></button>
+      <button class="nav-item so-admin" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif"></span></button>
     </div>
-    <div class="nav-sec">
+    <div class="nav-sec so-admin">
       <div class="nav-lbl">Histórico</div>
       <button class="nav-item" data-page="historico">📂 Histórico <span class="badge" id="b-hist"></span></button>
     </div>
-    <div class="nav-sec">
+    <div class="nav-sec so-admin">
       <div class="nav-lbl">Dados</div>
       <button class="nav-item" onclick="exportCSV()">↓ Exportar CSV</button>
       <button class="nav-item" onclick="imprimirGuarda()">📋 Relatório Guarda</button>
       <button class="nav-item" onclick="exportBackup()">💾 Salvar backup</button>
       <button class="nav-item" onclick="document.getElementById('backup-file').click()">📥 Restaurar backup</button>
+      <button class="nav-item" data-page="usuarios">👥 Usuários</button>
       <input type="file" id="backup-file" accept=".json,application/json" hidden onchange="importBackup(this)">
     </div>
   </nav>
@@ -463,8 +477,8 @@ body.busy,body.busy *{cursor:progress!important}
       <div class="card" style="margin-bottom:14px">
         <div class="g-stats">
           <div class="g-stat"><div class="g-stat-val" style="color:var(--red)" id="g-irr">0</div><div class="g-stat-lbl">Irregulares</div></div>
-          <div class="g-stat"><div class="g-stat-val" style="color:var(--gold)" id="g-tot">0</div><div class="g-stat-lbl">Total</div></div>
-          <div class="g-stat"><div class="g-stat-val" style="color:var(--green)" id="g-reg">0</div><div class="g-stat-lbl">Regulares</div></div>
+          <div class="g-stat so-admin"><div class="g-stat-val" style="color:var(--gold)" id="g-tot">0</div><div class="g-stat-lbl">Total</div></div>
+          <div class="g-stat so-admin"><div class="g-stat-val" style="color:var(--green)" id="g-reg">0</div><div class="g-stat-lbl">Regulares</div></div>
           <div class="g-stat"><div class="g-stat-val" style="font-size:14px;font-weight:700;color:var(--tx)" id="g-data">—</div><div class="g-stat-lbl">Data do Relatório</div></div>
         </div>
         <div class="g-warn">
@@ -472,11 +486,35 @@ body.busy,body.busy *{cursor:progress!important}
           <div class="g-warn-d" id="g-instr">Os veículos abaixo estão com documentação irregular junto à OuroTran. A Guarda Municipal está autorizada a verificar e impedir a circulação dos veículos identificados até regularização junto ao setor de transporte da Prefeitura de Ouro Preto.</div>
         </div>
         <div class="tbl-wrap">
+          <div class="g-busca">
+            <div class="search-box"><span style="color:var(--tx3)">🔍</span><input type="search" id="g-busca" placeholder="Consultar placa ou nome..." oninput="renderGuarda()" autocomplete="off" aria-label="Consultar placa ou nome"></div>
+          </div>
+          <div id="g-resultado"></div>
           <table>
             <thead><tr><th>#</th><th>Permissionário</th><th>Placa</th><th>Ponto de Táxi</th><th>Telefone</th><th>Situação</th></tr></thead>
             <tbody id="guarda-table"></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- USUARIOS -->
+    <section class="page" id="page-usuarios">
+      <div class="form-header"><div><div class="form-title">Usuários</div><div class="form-sub">QUEM PODE ENTRAR NO SISTEMA</div></div></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">Adicionar acesso</div>
+        <form class="form-grid" onsubmit="addUsuario(event)">
+          <div class="fg"><label class="fl" for="us-email">E-mail</label><input class="fi" type="email" id="us-email" placeholder="guarda@exemplo.com" required></div>
+          <div class="fg"><label class="fl" for="us-papel">Tipo de acesso</label>
+            <select class="fi" id="us-papel"><option value="guarda">🛡️ Guarda Municipal — só consulta irregulares</option><option value="admin">🔑 Administrador — acesso total</option></select>
+          </div>
+          <div class="fg full"><button class="btn btn-gold" style="justify-self:start">+ Adicionar</button></div>
+        </form>
+        <div class="hint" style="margin-top:12px;line-height:1.6">Depois de adicionar, a pessoa abre o sistema, digita esse e-mail e uma senha nova, clica em <b>Primeiro acesso</b> e confirma pelo link que chega no e-mail.</div>
+      </div>
+      <div class="card">
+        <div class="sec-title">Com acesso</div>
+        <div id="usr-list"></div>
       </div>
     </section>
 
@@ -559,7 +597,7 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var CK_ITEMS = ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'];
 var MSG_PADRAO = 'Olá *{NOME}*! 👋\n\nA *OuroTran* — Superintendência de Transporte de Ouro Preto informa que seu veículo de placa *{PLACA}* (Ponto: {PONTO}) está com *documentação irregular*.\n\n⚠️ *Situação:* {OBS}\n\nPor favor, regularize sua situação o mais breve possível para evitar *suspensão da permissão*.\n\nDúvidas: Entre em contato com a OuroTran.\n📍 Prefeitura de Ouro Preto — Setor de Transporte';
-var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Permissionários', 'CADASTRO DE TAXISTAS'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'] };
+var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Permissionários', 'CADASTRO DE TAXISTAS'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
 
 var permissionarios = [];
 var fiscalizacoes = [];
@@ -685,15 +723,17 @@ async function iniciarSessao(session) {
   $('lg-form').hidden = true;
   loginMsg('Carregando dados...');
   try {
-    var acesso = await db(sb.from('usuarios_autorizados').select('email').maybeSingle());
+    var acesso = await db(sb.from('usuarios_autorizados').select('email, papel').eq('email', session.user.email.toLowerCase()).maybeSingle());
     if (!acesso) { await sb.auth.signOut(); mostrarLogin('O e-mail ' + session.user.email + ' não tem acesso ao sistema.', true); return; }
+    papel = acesso.papel;
+    document.body.classList.toggle('modo-guarda', papel === 'guarda');
     await carregarDados();
     $('user-email').textContent = session.user.email;
     $('login').classList.add('hide');
     $('lg-senha').value = '';
     irPara(paginaAtual);
     updateBadges();
-    verificarDadosAntigos();
+    if (papel === 'admin') verificarDadosAntigos();
   } catch (e) {
     mostrarLogin('Não foi possível carregar os dados: ' + traduzErro(e), true);
   }
@@ -752,10 +792,12 @@ async function sair() {
 }
 
 // ---------- navegação ----------
-var RENDER = { dashboard: updateDash, permissionarios: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist };
+var RENDER = { dashboard: updateDash, permissionarios: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios };
 var paginaAtual = 'dashboard';
+var papel = 'admin';
 
 function irPara(pg) {
+  if (papel === 'guarda') pg = 'guarda';
   paginaAtual = pg;
   document.querySelectorAll('.nav-item[data-page]').forEach(function(n) { n.classList.toggle('active', n.dataset.page === pg); });
   document.querySelectorAll('.page').forEach(function(p) { p.classList.toggle('active', p.id === 'page-' + pg); });
@@ -1036,13 +1078,24 @@ function fecharFila() { fila = []; $('queue-bar').classList.remove('show'); }
 // ---------- Guarda Municipal ----------
 function renderGuarda() {
   var irrList = getIrr();
+  var q = $('g-busca').value.trim().toUpperCase();
+  var qPlaca = q.replace(/[^A-Z0-9]/g, '');
+  var lista = q ? irrList.filter(function(p) { return (qPlaca && p.placa.indexOf(qPlaca) !== -1) || p.nome.indexOf(q) !== -1; }) : irrList;
+  // placa completa digitada: resposta direta para o guarda na rua
+  var res = '';
+  if (/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(qPlaca)) {
+    res = lista.some(function(p) { return p.placa === qPlaca; })
+      ? '<div class="g-resultado irr">⛔ Placa ' + esc(qPlaca) + ': IRREGULAR — veículo não pode circular</div>'
+      : '<div class="g-resultado ok">✅ Placa ' + esc(qPlaca) + ' não consta na lista de irregulares</div>';
+  }
+  $('g-resultado').innerHTML = res;
   $('g-irr').textContent = irrList.length;
   $('g-tot').textContent = permissionarios.length;
   $('g-reg').textContent = permissionarios.length - irrList.length;
   $('g-data').textContent = fmtD(hojeISO());
-  $('guarda-table').innerHTML = irrList.map(function(p, i) {
+  $('guarda-table').innerHTML = lista.map(function(p, i) {
     return '<tr><td style="color:var(--tx3);font-weight:600">' + pad(i + 1) + '</td><td><strong>' + esc(p.nome) + '</strong>' + (p.obs ? '<div style="font-size:11px;color:var(--tx3);font-style:italic">' + esc(p.obs) + '</div>' : '') + '</td><td><span class="placa">' + esc(p.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + esc(p.ponto || '—') + '</td><td style="font-size:12px;white-space:nowrap">' + esc(p.tel || '—') + '</td><td><span class="pill irregular">IRREGULAR</span></td></tr>';
-  }).join('') || '<tr><td colspan="6"><div class="empty">Nenhum irregular</div></td></tr>';
+  }).join('') || '<tr><td colspan="6"><div class="empty">' + (q ? 'Nenhum irregular encontrado' : 'Nenhum irregular') + '</div></td></tr>';
 }
 
 // Abre uma versão para impressão; no diálogo do navegador dá para escolher "Salvar como PDF"
@@ -1056,7 +1109,7 @@ function imprimirGuarda() {
     'body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:24px}h1{font-size:16px;margin:0}h2{font-size:12px;font-weight:normal;color:#555;margin:2px 0 12px}' +
     '.box{border-left:3px solid #c00;background:#fbeaea;padding:8px 10px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:5px 6px;text-align:left;vertical-align:top}' +
     'th{background:#eee;font-size:10px;text-transform:uppercase}.pl{font-family:monospace;letter-spacing:1px;white-space:nowrap}tr{page-break-inside:avoid}.ass{margin-top:40px;display:flex;gap:60px}.ass div{flex:1;border-top:1px solid #000;padding-top:4px;text-align:center}' +
-    '</style></head><body><h1>OUROTRAN — RELATÓRIO PARA A GUARDA MUNICIPAL</h1><h2>Prefeitura de Ouro Preto · Data: ' + hoje + ' · Irregulares: ' + irrList.length + ' de ' + permissionarios.length + '</h2>' +
+    '</style></head><body><h1>OUROTRAN — RELATÓRIO PARA A GUARDA MUNICIPAL</h1><h2>Prefeitura de Ouro Preto · Data: ' + hoje + ' · Irregulares: ' + irrList.length + (papel === 'admin' ? ' de ' + permissionarios.length : '') + '</h2>' +
     '<div class="box">' + esc($('g-instr').textContent) + '</div>' +
     '<table><thead><tr><th>#</th><th>Permissionário</th><th>Placa</th><th>Ponto</th><th>Telefone</th><th>Situação</th></tr></thead><tbody>' + linhas + '</tbody></table>' +
     '<div class="ass"><div>Responsável OuroTran</div><div>Guarda Municipal</div></div></body></html>';
@@ -1075,6 +1128,40 @@ function enviarGuardaWpp() {
   var msg = '*OUROTRAN - Relatório Guarda Municipal*\nData: ' + hoje + '\nIrregulares: ' + irrList.length + '\n\n' + lista;
   window.open(waLink('', msg), '_blank', 'noopener');
   showToast('Escolha o contato da Guarda no WhatsApp');
+}
+
+// ---------- usuários ----------
+var PAPEIS = { admin: '🔑 Administrador', guarda: '🛡️ Guarda Municipal' };
+async function renderUsuarios() {
+  $('usr-list').innerHTML = vazio('Carregando...');
+  try {
+    var lista = await db(sb.from('usuarios_autorizados').select('email, papel').order('papel').order('email'));
+    var eu = sessaoAtual && sessaoAtual.user.email.toLowerCase();
+    $('usr-list').innerHTML = lista.map(function(u, i) {
+      return '<div class="usr-item"><div class="usr-email">' + esc(u.email) + (u.email === eu ? ' <span class="hint">(você)</span>' : '') + '</div>' +
+        '<span class="pill ' + (u.papel === 'admin' ? 'autuado' : 'regular') + '">' + PAPEIS[u.papel] + '</span>' +
+        (u.email === eu ? '' : '<button class="btn btn-red btn-sm" data-email="' + esc(u.email) + '" onclick="remUsuario(this.dataset.email)" aria-label="Remover acesso">Remover</button>') + '</div>';
+    }).join('') || vazio('Ninguém');
+  } catch (e) { $('usr-list').innerHTML = vazio('Não foi possível carregar'); falha(e); }
+}
+function addUsuario(ev) {
+  ev.preventDefault();
+  var email = $('us-email').value.trim().toLowerCase(), p = $('us-papel').value;
+  if (p === 'admin' && !confirm('Dar acesso TOTAL (administrador) para ' + email + '?')) return;
+  acao(async function() {
+    await db(sb.from('usuarios_autorizados').upsert({ email: email, papel: p }));
+    $('us-email').value = '';
+    showToast('Acesso liberado para ' + email);
+    await renderUsuarios();
+  });
+}
+function remUsuario(email) {
+  if (!confirm('Remover o acesso de ' + email + '?')) return;
+  acao(async function() {
+    await db(sb.from('usuarios_autorizados').delete().eq('email', email));
+    showToast('Acesso removido');
+    await renderUsuarios();
+  });
 }
 
 // ---------- notificações ----------

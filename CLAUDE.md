@@ -9,8 +9,9 @@ Autoria dos commits: Hugo Marotta.
 - `index.html`: todo o front-end (HTML + CSS + JavaScript puro, sem build). Usa `@supabase/supabase-js` pelo CDN.
 - Banco: Supabase, projeto `ourotran` (id `hyjhxplpylbaerpkdrnl`, região São Paulo).
   - `permissionarios`, `fiscalizacoes`, `configuracoes` (`wpp_msg` = mensagem do WhatsApp).
-  - `usuarios_autorizados`: e-mails com acesso. Criar conta no login não dá acesso sem estar nessa tabela.
-  - RLS em todas as tabelas: só usuários autorizados leem/gravam (`privado.usuario_autorizado()`).
+  - `usuarios_autorizados`: e-mail + `papel` (`admin` ou `guarda`). Criar conta no login não dá acesso sem estar nessa tabela.
+  - RLS por papel (`privado.papel()`): admin lê/grava tudo; guarda só lê permissionários IRREGULARES.
+  - Modo guarda no front: `body.modo-guarda` esconde tudo com `.so-admin`; `irPara` força a página `guarda`.
   - Trigger `privado.ajustar_sequencia` avança o contador de ids após importar backup com ids explícitos.
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
 - A chave `sb_publishable_...` no código é pública por design; nunca colocar a `service_role` no front-end.
@@ -21,7 +22,7 @@ Autoria dos commits: Hugo Marotta.
 
 Dashboard · Permissionários (busca, filtro, novo/editar/excluir ao clicar no cartão) · Fiscalização (checklist
 OK/NOK) · WhatsApp (fila de envio, uma conversa por clique, porque o navegador bloqueia várias janelas) ·
-Guarda Municipal (impressão/PDF e WhatsApp) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
+Guarda Municipal (consulta de placa, impressão/PDF e WhatsApp) · Usuários (admin libera e-mails da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
 
 ## Convenções
 
