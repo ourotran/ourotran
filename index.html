@@ -225,9 +225,44 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
   .wpp-stats{grid-template-columns:repeat(3,1fr);gap:6px}
   .kpi-val{font-size:26px}
 }
+
+/* LOGIN */
+.login{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
+.login.hide{display:none}
+.login-box{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rl);padding:28px;width:360px;max-width:100%}
+.login-links{display:flex;justify-content:space-between;margin-top:14px}
+.login-msg{font-size:12px;color:var(--tx2);min-height:18px;margin-top:14px;line-height:1.5}
+.login-msg.err{color:var(--red)}
+.link-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-family:inherit;padding:0}
+.link-btn:hover{text-decoration:underline}
+.user-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.user-line span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.busy,body.busy *{cursor:progress!important}
 </style>
 </head>
 <body>
+
+<div class="login" id="login">
+  <div class="login-box">
+    <div class="logo-box">
+      <div class="logo-icon">OP</div>
+      <div>
+        <div class="logo-name">OUROTRAN</div>
+        <div class="logo-sub">Fiscalização de Táxi</div>
+      </div>
+    </div>
+    <form id="lg-form" onsubmit="entrar(event)" hidden style="margin-top:22px">
+      <div class="fg" style="margin-bottom:12px"><label class="fl" for="lg-email">E-mail</label><input class="fi" type="email" id="lg-email" autocomplete="username"></div>
+      <div class="fg"><label class="fl" for="lg-senha">Senha</label><input class="fi" type="password" id="lg-senha" autocomplete="current-password"></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:16px">Entrar</button>
+      <div class="login-links">
+        <button type="button" class="link-btn" onclick="criarAcesso()">Primeiro acesso</button>
+        <button type="button" class="link-btn" onclick="esqueciSenha()">Esqueci a senha</button>
+      </div>
+    </form>
+    <div class="login-msg" id="lg-msg">Verificando acesso...</div>
+  </div>
+</div>
 
 <div class="backdrop" onclick="toggleNav(false)"></div>
 
@@ -271,7 +306,9 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
       <input type="file" id="backup-file" accept=".json,application/json" hidden onchange="importBackup(this)">
     </div>
   </nav>
-  <div class="sidebar-footer">OuroTran v3.1 · 2026<br>Prefeitura de Ouro Preto — OuroTran</div>
+  <div class="sidebar-footer">OuroTran v4.0 · 2026<br>Prefeitura de Ouro Preto — OuroTran
+    <div class="user-line"><span id="user-email"></span><button class="link-btn" onclick="sair()">Sair</button></div>
+  </div>
 </aside>
 
 <div class="main">
@@ -293,6 +330,7 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
   </header>
 
   <main class="content">
+    <div id="migra"></div>
 
     <!-- DASHBOARD -->
     <section class="page active" id="page-dashboard">
@@ -399,7 +437,7 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
         <div class="wpp-stat"><div class="wpp-stat-val" style="color:var(--green)" id="wst-env">0</div><div class="wpp-stat-lbl">Notificados Hoje</div></div>
       </div>
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">✏️ Mensagem Padrão <span>EDITÁVEL — SALVA AUTOMATICAMENTE</span>
+        <div class="sec-title">✏️ Mensagem Padrão <span>EDITÁVEL — SALVA NO BANCO</span>
           <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="restaurarMsg()">Restaurar padrão</button>
         </div>
         <div style="margin-bottom:10px">
@@ -512,40 +550,25 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-ic">✅</span> <span id="toast-msg">OK</span></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-var PERM_DEFAULT = [{"id":1,"nome":"ROSELI MARIA ELANDE","cpf":"","cnh":"","numPerm":"TAX-001","vencPerm":"","placa":"PUL0423","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99608-2746","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2022"},{"id":2,"nome":"FELIPE LUCIANO GUIMARÃES","cpf":"","cnh":"","numPerm":"TAX-002","vencPerm":"","placa":"QQT0I62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99632-5960","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"SELO 2025"},{"id":3,"nome":"AIRTON MOREIRA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-003","vencPerm":"","placa":"PWU7110","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987597758","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2019"},{"id":4,"nome":"ALISON ANDRÉ FERREIRA MACHADO","cpf":"","cnh":"","numPerm":"TAX-004","vencPerm":"","placa":"SHE2F58","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99720-6689","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":5,"nome":"MARCELO SENI ANACLETO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-005","vencPerm":"","placa":"SYY2H78","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99606-4002","ponto":"SARAMENHA/ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2025 - DOCUMENTAÇÃO 2026 OK"},{"id":6,"nome":"ANTÔNIO BRUNO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-006","vencPerm":"","placa":"SHN3B18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999613124","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"DOCUMENTAÇÃO 2026 OK, FALTA SELAR 2026"},{"id":7,"nome":"ANTÔNIO DIMAS MENDES","cpf":"","cnh":"","numPerm":"TAX-007","vencPerm":"","placa":"TEB5C43","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999796118","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":8,"nome":"VALÉRIA MAZON JARDIM","cpf":"","cnh":"","numPerm":"TAX-008","vencPerm":"","placa":"QPX3131","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988248697","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":9,"nome":"ANTÔNIO NOBERTO VIANA","cpf":"","cnh":"","numPerm":"TAX-009","vencPerm":"","placa":"SIY8B85","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987529956","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELO 2025"},{"id":10,"nome":"ANDERSON LUIZ PAIVA XAVIER","cpf":"","cnh":"","numPerm":"TAX-010","vencPerm":"","placa":"TCY4H03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971965642","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":11,"nome":"ROSILDA APARECIDA DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-011","vencPerm":"","placa":"OQR8A02","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99604-9397","ponto":"DISTRITO DE SANTO ANTÔNIO DO SALTO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":12,"nome":"MATEUS ALEX DIAS SILAMI","cpf":"","cnh":"","numPerm":"TAX-012","vencPerm":"","placa":"QMZ7E88","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)98698559","ponto":"DISTRITO DE AMARANTINA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":13,"nome":"BONIFÁCIO MACHADO DE ANDRADE","cpf":"","cnh":"","numPerm":"TAX-013","vencPerm":"","placa":"QXC4I71","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99715-8008","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":14,"nome":"ATAÍDE PEDRO GOMES","cpf":"","cnh":"","numPerm":"TAX-014","vencPerm":"","placa":"SIV6F22","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988629273","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":15,"nome":"BENEDITO JESUS DE OLIVEIRA FILHO","cpf":"","cnh":"","numPerm":"TAX-015","vencPerm":"","placa":"GZQ4023","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99612165","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":16,"nome":"CARLOS GUILHERME DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-016","vencPerm":"","placa":"QNH3B06","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":17,"nome":"CARLOS LINO CARNEIRO","cpf":"","cnh":"","numPerm":"TAX-017","vencPerm":"","placa":"RUX7E72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)97359269","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"SELADO 22/04/2026"},{"id":18,"nome":"CARLOS ROBERTO GOMES MOREIRA","cpf":"","cnh":"","numPerm":"TAX-018","vencPerm":"","placa":"SHG5C77","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611524","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":19,"nome":"CHRISTIAN LUCIANO RODRIGUES RIOGA","cpf":"","cnh":"","numPerm":"TAX-019","vencPerm":"","placa":"QXM8G80","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)982080361","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA ATESTADO MEDICO E CERTIDAO NEGATIVA 2026"},{"id":20,"nome":"ELIO JOSÉ MACIEL","cpf":"","cnh":"","numPerm":"TAX-020","vencPerm":"","placa":"TYV2G41","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999617090","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":21,"nome":"CREUSA XAVIER DANTAS","cpf":"","cnh":"","numPerm":"TAX-021","vencPerm":"","placa":"QOV5572","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":22,"nome":"ARLISSON MENDES MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-022","vencPerm":"","placa":"TYI4G97","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985001096","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":23,"nome":"DAVID FELIPE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-023","vencPerm":"","placa":"SHZ1I83","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997576944","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"CARRO DEU PT - AGUARDANDO VEÍCULO NOVO"},{"id":24,"nome":"ÉDSON VALDIVINO SIQUEIRA","cpf":"","cnh":"","numPerm":"TAX-024","vencPerm":"","placa":"RVF5F95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)991176273","ponto":"DISTRITO RODRIGO SILVA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":25,"nome":"EDUARDO FERNANDO PAILER SIQUEIRA","cpf":"","cnh":"","numPerm":"TAX-025","vencPerm":"","placa":"HLD3400","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE GLAURA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":26,"nome":"EDUARDO HENRIQUE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-026","vencPerm":"","placa":"SIL4I17","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999612409","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":27,"nome":"EDUARDO LOMAS","cpf":"","cnh":"","numPerm":"TAX-027","vencPerm":"","placa":"TMH4C21","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611534","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":28,"nome":"ELBERSON SERRANO ZANETTI","cpf":"","cnh":"","numPerm":"TAX-028","vencPerm":"","placa":"QUB7J69","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997261248","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":29,"nome":"LAURISSE MORAES DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-029","vencPerm":"","placa":"RTU0H89","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)992118037","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":30,"nome":"ANDRE DE PAULA DE SOUSA","cpf":"","cnh":"","numPerm":"TAX-030","vencPerm":"","placa":"TER4B77","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987372459","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":31,"nome":"REGINALDO LUIS VIANA","cpf":"","cnh":"","numPerm":"TAX-031","vencPerm":"","placa":"PUR7401","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987944704","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":32,"nome":"WENDER FLAVIO PEREIRA MARÇAL","cpf":"","cnh":"","numPerm":"TAX-032","vencPerm":"","placa":"QXU5D84","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA ALGUMAS DOCUMENTAÇÃO 2026"},{"id":33,"nome":"GERALDO CAMILO GONÇALVES FILHO","cpf":"","cnh":"","numPerm":"TAX-033","vencPerm":"","placa":"PUX4706","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985302868","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":34,"nome":"GERCY FERREIRA DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-034","vencPerm":"","placa":"HMA9579","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985656910","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":35,"nome":"GERALDO PIO MORAES","cpf":"","cnh":"","numPerm":"TAX-035","vencPerm":"","placa":"QQC5856","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986132386","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":36,"nome":"GILBERTO NOLASCO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-036","vencPerm":"","placa":"TYV8I00","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)994032148","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":37,"nome":"GIUMAR EDERSON MENDES","cpf":"","cnh":"","numPerm":"TAX-037","vencPerm":"","placa":"QQC5B81","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998313680","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":38,"nome":"HAROLDO GOLINELI","cpf":"","cnh":"","numPerm":"TAX-038","vencPerm":"","placa":"SHF2B18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987751705","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":39,"nome":"MAURO LUCIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-039","vencPerm":"","placa":"TEA7D72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE RODRIGO SILVA","situacao":"IRREGULAR","obs":"FALTA ALGUMAS DOCUMENTAÇÃO 2026"},{"id":40,"nome":"IRACI FERNANDES","cpf":"","cnh":"","numPerm":"TAX-040","vencPerm":"","placa":"OPG9502","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":41,"nome":"JADIR ANTÔNIO PEREIRA","cpf":"","cnh":"","numPerm":"TAX-041","vencPerm":"","placa":"QOM9100","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611096","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":42,"nome":"JAIR NOVAIS RODRIGUES","cpf":"","cnh":"","numPerm":"TAX-042","vencPerm":"","placa":"TCQ9J52","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997810156","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":43,"nome":"THIAGO DE DEUS FERNANDES","cpf":"","cnh":"","numPerm":"TAX-043","vencPerm":"","placa":"PWH7281","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998601821","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":44,"nome":"EMANUELLE MARIA CAMARA NOGUEIRA","cpf":"","cnh":"","numPerm":"TAX-044","vencPerm":"","placa":"TCQ2F62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESÁRIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":45,"nome":"MÁRCIO GUEDES DA CUNHA","cpf":"","cnh":"","numPerm":"TAX-045","vencPerm":"","placa":"TDU4F40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)996187232","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"SELADO 2026"},{"id":46,"nome":"GERALDO MAGELA DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-046","vencPerm":"","placa":"TEO7D49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)989048738","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2026"},{"id":47,"nome":"MÔNICA MERCÊS COSTA PAIVA","cpf":"","cnh":"","numPerm":"TAX-047","vencPerm":"","placa":"PZG8H38","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"DOCUMENTAÇÃO REGULAR/SEM SELO 2025"},{"id":48,"nome":"JOSÉ ANTÔNIO BORTOLINI ROMERO","cpf":"","cnh":"","numPerm":"TAX-048","vencPerm":"","placa":"QMY5D52","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999741248","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":49,"nome":"JULIANO ESTANISLAU ARDUINDO BRAGA","cpf":"","cnh":"","numPerm":"TAX-049","vencPerm":"","placa":"OQK9463","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611068","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":50,"nome":"JOSÉ GERALDO PENA","cpf":"","cnh":"","numPerm":"TAX-050","vencPerm":"","placa":"RTX9H49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999262079","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":51,"nome":"JOSÉ JUVENTINO DE FREITAS","cpf":"","cnh":"","numPerm":"TAX-051","vencPerm":"","placa":"","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":52,"nome":"JOSÉ MARIA DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-052","vencPerm":"","placa":"RFU1E68","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997712555","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":53,"nome":"JUSELITO JOSE DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-053","vencPerm":"","placa":"SYF2H40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611743","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"SELADO 2026"},{"id":54,"nome":"LAURO AUGUSTO FERNANDES LOPES","cpf":"","cnh":"","numPerm":"TAX-054","vencPerm":"","placa":"PVV2499","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)996604957","ponto":"DISTRITO DE RODRIGO SILVA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":55,"nome":"LUCIANO MAROTTA JARDIM","cpf":"","cnh":"","numPerm":"TAX-055","vencPerm":"","placa":"PZS3B72","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999244344","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":56,"nome":"LUCIO MAURO DOS SANTOS","cpf":"","cnh":"","numPerm":"TAX-056","vencPerm":"","placa":"QQJ7J76","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987343024","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":57,"nome":"JUSSIMAR LESSA VIEIRA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-057","vencPerm":"","placa":"QUQ8G75","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999427227","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":58,"nome":"LUIS EUGÊNIO MORAES FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-058","vencPerm":"","placa":"RTX6F40","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA SELAR"},{"id":59,"nome":"MANOEL CANDIDO DA ROCHA","cpf":"","cnh":"","numPerm":"TAX-059","vencPerm":"","placa":"TCS2G18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999965523","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":60,"nome":"MARCELO RAIMUNDO BARBOSA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-060","vencPerm":"","placa":"QZL8D64","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986418073","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":61,"nome":"MARINALVA GRACIOLI NEVES MATOS","cpf":"","cnh":"","numPerm":"TAX-061","vencPerm":"","placa":"QXD6123","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986297743","ponto":"LARGO DO COIMBRA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":62,"nome":"MARCIO AUGUSTO FERREIRA RAMOS","cpf":"","cnh":"","numPerm":"TAX-062","vencPerm":"","placa":"PYA3297","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999955704","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":63,"nome":"MARIA LUIZA COELHO FREITAS","cpf":"","cnh":"","numPerm":"TAX-063","vencPerm":"","placa":"QXF9883","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987363808","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":64,"nome":"MARCOS ANTÔNIO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-064","vencPerm":"","placa":"TD6I30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985018641","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIARIO","situacao":"IRREGULAR","obs":"EXAME MEDICO VENCIDO"},{"id":65,"nome":"MARIA DAS GRAÇAS QUIRINO SOUZA","cpf":"","cnh":"","numPerm":"TAX-065","vencPerm":"","placa":"PZM4777","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":66,"nome":"MARIA HELENA VENANCIA DA SILVA","cpf":"","cnh":"","numPerm":"TAX-066","vencPerm":"","placa":"SIA8G90","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985294768","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":67,"nome":"MARIO ANTONIO MOREIRA","cpf":"","cnh":"","numPerm":"TAX-067","vencPerm":"","placa":"SIH0J73","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)982659229","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":68,"nome":"MAURILIO JOSÉ DA SILVA","cpf":"","cnh":"","numPerm":"TAX-068","vencPerm":"","placa":"TXB0B95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999614665","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":69,"nome":"DANIELLE CRISTINA TEIXEIRA","cpf":"","cnh":"","numPerm":"TAX-069","vencPerm":"","placa":"QWS6192","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99617091","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":70,"nome":"LISIA MAGNA BARBOSA MOURA","cpf":"","cnh":"","numPerm":"TAX-070","vencPerm":"","placa":"SHL8J03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987423973","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":71,"nome":"DIMAS DOS SANTOS ARAÚJO","cpf":"","cnh":"","numPerm":"TAX-071","vencPerm":"","placa":"TWYSB18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997771721","ponto":"CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":72,"nome":"JOSIOMAR APARECIDO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-072","vencPerm":"","placa":"RMJ7E13","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":73,"nome":"ALAN MAPA ALVES","cpf":"","cnh":"","numPerm":"TAX-073","vencPerm":"","placa":"RVM3A50","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985008253","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":74,"nome":"WASHINGTON NONATO COELHO","cpf":"","cnh":"","numPerm":"TAX-074","vencPerm":"","placa":"TEE1H11","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997655676","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":75,"nome":"OSMAR CLAUDIO MARTINS","cpf":"","cnh":"","numPerm":"TAX-075","vencPerm":"","placa":"PXN1447","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988133663","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":76,"nome":"OTAIR RIBEIRO GOMES","cpf":"","cnh":"","numPerm":"TAX-076","vencPerm":"","placa":"QQA7H51","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999095676","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":77,"nome":"PATRICIA DO CARMO","cpf":"","cnh":"","numPerm":"TAX-077","vencPerm":"","placa":"SHF7B30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)988468700","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":78,"nome":"WANDER ANACLETO DA SILVA","cpf":"","cnh":"","numPerm":"TAX-078","vencPerm":"","placa":"PWC7654","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESARIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":79,"nome":"VALTENIR ELIZEU DA ROCHA","cpf":"","cnh":"","numPerm":"TAX-079","vencPerm":"","placa":"RVL7F87","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971684468","ponto":"DISTRITO DE GLAURA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":80,"nome":"ANTÔNIO CARLOS DA SILVA","cpf":"","cnh":"","numPerm":"TAX-080","vencPerm":"","placa":"QXV2G95","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998047526","ponto":"DISTRITO SANTO ANTONIO DO LEITE","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":81,"nome":"MARINA DOS SANTOS MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-081","vencPerm":"","placa":"TDE8E87","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986414586","ponto":"BAUXITA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":82,"nome":"RICARDO DE MAGALHÃES GOMES","cpf":"","cnh":"","numPerm":"TAX-082","vencPerm":"","placa":"RFP2H46","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986025601","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":83,"nome":"RENILTON DOS REIS","cpf":"","cnh":"","numPerm":"TAX-083","vencPerm":"","placa":"QND6C49","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"AGUARDANDO TROCA DE PLACA"},{"id":84,"nome":"LÍRIA CLARA RIBAS","cpf":"","cnh":"","numPerm":"TAX-084","vencPerm":"","placa":"RNW6I08","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)987120760","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":85,"nome":"ROBERTO NASCIMENTO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-085","vencPerm":"","placa":"RMD2C48","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611818","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":86,"nome":"ROBSON WASHINGTON DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-086","vencPerm":"","placa":"QUH4068","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA CESARIO ALVIM","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":87,"nome":"MARIA RAQUEL PEDROSA XAVIER","cpf":"","cnh":"","numPerm":"TAX-087","vencPerm":"","placa":"RUR2F30","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998666303","ponto":"DISTRITO DE GLAURA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":88,"nome":"SEBASTIÃO APARECIDO QUIRINO","cpf":"","cnh":"","numPerm":"TAX-088","vencPerm":"","placa":"PZV7479","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998071821","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":89,"nome":"SEBASTIÃO GREGÓRIO DA CRUZ","cpf":"","cnh":"","numPerm":"TAX-089","vencPerm":"","placa":"QNA1941","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)986077688","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":90,"nome":"VANDERLEI MARCIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-090","vencPerm":"","placa":"RFV4H18","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999438409","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":91,"nome":"JULIARD HENRIQUE A DE FIGUEIREDO","cpf":"","cnh":"","numPerm":"TAX-091","vencPerm":"","placa":"RVE8I20","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"PERMISSIONARIO NOVO - PEDIR DOCS"},{"id":92,"nome":"SILVIO BARBOSA XAVIER","cpf":"","cnh":"","numPerm":"TAX-092","vencPerm":"","placa":"QNU4667","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971256072","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":93,"nome":"SUELI BASILIO DA CONCEIÇÃO","cpf":"","cnh":"","numPerm":"TAX-093","vencPerm":"","placa":"RTR6I24","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997158008","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"TROCA DE PERMISSIONARIO FALECIDO"},{"id":94,"nome":"MARIO COELHO DE MAGALHÃES","cpf":"","cnh":"","numPerm":"TAX-094","vencPerm":"","placa":"RNE7G14","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)997897772","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":95,"nome":"TULIO PETERSON DO NASCIMENTO","cpf":"","cnh":"","numPerm":"TAX-095","vencPerm":"","placa":"PPX5B41","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)989891518","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":96,"nome":"VALDOMIRO DONATO FERREIRA","cpf":"","cnh":"","numPerm":"TAX-096","vencPerm":"","placa":"QXJ0445","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)984402706","ponto":"DISTRITO AMARANTINA","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":97,"nome":"VALTER EVANGELISTA SEVERO","cpf":"","cnh":"","numPerm":"TAX-097","vencPerm":"","placa":"HBG8979","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999270011","ponto":"LARGO DO COIMBRA","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":98,"nome":"VANDERLEI GOMES MOREIRA","cpf":"","cnh":"","numPerm":"TAX-098","vencPerm":"","placa":"QXH1H03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999611107","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":99,"nome":"LUIS FLAVIO GONÇALVES ROCHA","cpf":"","cnh":"","numPerm":"TAX-099","vencPerm":"","placa":"QPR4201","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)998025788","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO DESDE 2024"},{"id":100,"nome":"VICENTE DE SOUZA","cpf":"","cnh":"","numPerm":"TAX-100","vencPerm":"","placa":"TCM2E46","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971411813","ponto":"DISTRITO SANTO ANTONIO DO SALTO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":101,"nome":"RONAN LIMA FRANCO","cpf":"","cnh":"","numPerm":"TAX-101","vencPerm":"","placa":"RUB5E92","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"","ponto":"PRAÇA TIRADENTES/TERMINAL RODOVIÁRIO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":102,"nome":"EDERSON SERRANO ZANETTI","cpf":"","cnh":"","numPerm":"TAX-102","vencPerm":"","placa":"QXP1C00","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985102140","ponto":"SARAMENHA/VILA ITACOLOMY","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":103,"nome":"DARINALDO SANTANA TOMAZ","cpf":"","cnh":"","numPerm":"TAX-103","vencPerm":"","placa":"TZA3B03","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999430682","ponto":"CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"SELADO 28/04/2026"},{"id":104,"nome":"WALTER HILARIO DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-104","vencPerm":"","placa":"RVE8G32","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99611798","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":105,"nome":"ADAIR DE PAULA DAS FLORES","cpf":"","cnh":"","numPerm":"TAX-105","vencPerm":"","placa":"QQT0I62","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)99632-5960","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK"},{"id":106,"nome":"WALISSON MARTINS","cpf":"","cnh":"","numPerm":"TAX-106","vencPerm":"","placa":"","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)985970143","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"IRREGULAR","obs":"FALTA TODA DOCUMENTAÇÃO DESDE 2025"},{"id":107,"nome":"WILBERT GUIMARÃES DE OLIVEIRA","cpf":"","cnh":"","numPerm":"TAX-107","vencPerm":"","placa":"QUX2B57","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)971299498","ponto":"PRAÇA TIRADENTES/TERMINAL TURISTICO","situacao":"IRREGULAR","obs":"FALTA DOCUMENTAÇÃO 2026"},{"id":108,"nome":"JOÃO ANTONIO DA COSTA","cpf":"","cnh":"","numPerm":"TAX-108","vencPerm":"","placa":"SHP8G08","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999430682","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"IRREGULAR","obs":"DOCUMENTOS OK, FALTA AGENDAR PARA SELAR"},{"id":109,"nome":"JOSÉ DAS GRAÇAS NOVAIS","cpf":"","cnh":"","numPerm":"TAX-109","vencPerm":"","placa":"TXM0J93","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)999606162","ponto":"DISTRITO DE CACHOEIRA DO CAMPO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"},{"id":110,"nome":"TIAGO VINICIUS GONÇALVES","cpf":"","cnh":"","numPerm":"TAX-110","vencPerm":"","placa":"PYY2393","modelo":"","crlv":"","seguro":"","vistoria":"","tel":"(31)992340952","ponto":"PRAÇA REINALDO ALVES DE BRITO","situacao":"REGULAR","obs":"DOCUMENTAÇÃO 2026 OK - SELADO 2026"}];
+// Chave pública do Supabase: pode ficar no código. Quem protege os dados é o login + as regras do banco (RLS).
+var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var CK_ITEMS = ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'];
 var MSG_PADRAO = 'Olá *{NOME}*! 👋\n\nA *OuroTran* — Superintendência de Transporte de Ouro Preto informa que seu veículo de placa *{PLACA}* (Ponto: {PONTO}) está com *documentação irregular*.\n\n⚠️ *Situação:* {OBS}\n\nPor favor, regularize sua situação o mais breve possível para evitar *suspensão da permissão*.\n\nDúvidas: Entre em contato com a OuroTran.\n📍 Prefeitura de Ouro Preto — Setor de Transporte';
 var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Permissionários', 'CADASTRO DE TAXISTAS'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'] };
 
+var permissionarios = [];
+var fiscalizacoes = [];
 var checkStates = {};
 var selecionados = {};
 var fila = [];
 var toastTimer = null;
-
-// ---------- armazenamento ----------
-function load(key, fallback) {
-  try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
-}
-function save() {
-  try {
-    localStorage.setItem('perm', JSON.stringify(permissionarios));
-    localStorage.setItem('fisc', JSON.stringify(fiscalizacoes));
-    localStorage.setItem('wppLog', JSON.stringify(wppLog));
-  } catch (e) { showToast('Não foi possível salvar no navegador', true); }
-}
-
-var permissionarios = load('perm', null) || JSON.parse(JSON.stringify(PERM_DEFAULT));
-var fiscalizacoes = load('fisc', []);
-// wppLog: { idPermissionario: 'AAAA-MM-DD' da última notificação }
-var wppLog = load('wppLog', null);
-if (!wppLog) {
-  // migra o formato antigo (lista de nomes, sem data)
-  wppLog = {};
-  load('wppEnv', []).forEach(function(nome) { var p = permissionarios.filter(function(x) { return x.nome === nome; })[0]; if (p) wppLog[p.id] = ''; });
-  localStorage.removeItem('wppEnv');
-}
+var msgTimer = null;
+var ocupado = false;
 
 // ---------- utilitários ----------
 function $(id) { return document.getElementById(id); }
@@ -561,9 +584,12 @@ function cleanTel(t) { return t ? String(t).replace(/\D/g, '') : ''; }
 // celular com DDD = 11 dígitos começando em 9; fixo = 10 dígitos
 function telValido(t) { var d = cleanTel(t); return (d.length === 11 && d[2] === '9') || (d.length === 10 && /[2-5]/.test(d[2])); }
 function waLink(tel, msg) { return 'https://wa.me/' + (tel ? '55' + cleanTel(tel) : '') + '?text=' + encodeURIComponent(msg); }
-function enviadoHoje(p) { return wppLog[p.id] === hojeISO(); }
+function enviadoHoje(p) { return p.wpp === hojeISO(); }
 function resClass(r) { return r === 'Regular' ? 'regular' : r === 'Autuado' ? 'autuado' : 'irregular'; }
 function vazio(msg) { return '<div class="muted">' + esc(msg) + '</div>'; }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
 function showModal(id) { $(id).classList.add('open'); var f = $(id).querySelector('input:not([type=hidden]),select'); if (f) f.focus(); }
 function closeModal(id) { $(id).classList.remove('open'); }
@@ -571,7 +597,7 @@ function showToast(msg, erro) {
   $('toast-msg').textContent = msg;
   $('toast-ic').textContent = erro ? '⚠️' : '✅';
   var t = $('toast'); t.classList.toggle('err', !!erro); t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
+  clearTimeout(toastTimer); toastTimer = setTimeout(function() { t.classList.remove('show'); }, erro ? 5000 : 3000);
 }
 function toggleNav(abrir) { document.body.classList.toggle('nav-open', abrir); }
 function download(nome, conteudo, tipo) {
@@ -582,6 +608,145 @@ function download(nome, conteudo, tipo) {
 
 function tick() { $('clock').textContent = new Date().toLocaleTimeString('pt-BR'); }
 setInterval(tick, 1000); tick();
+
+// ---------- banco de dados ----------
+async function db(consulta) { var r = await consulta; if (r.error) throw r.error; return r.data; }
+function falha(e) {
+  console.error(e);
+  var m = e && e.message || '';
+  showToast(/fetch|network/i.test(m) ? 'Sem conexão com a internet — nada foi salvo' : 'Erro ao salvar: ' + m, true);
+}
+// evita clique duplo enquanto o banco responde
+async function acao(fn) {
+  if (ocupado) return;
+  ocupado = true; document.body.classList.add('busy');
+  try { await fn(); } catch (e) { falha(e); } finally { ocupado = false; document.body.classList.remove('busy'); }
+}
+// o Supabase devolve no máximo 1000 linhas por consulta
+async function selectTudo(tabela) {
+  var todos = [], de = 0;
+  for (;;) {
+    var lote = await db(sb.from(tabela).select('*').order('id').range(de, de + 999));
+    todos = todos.concat(lote);
+    if (lote.length < 1000) return todos;
+    de += 1000;
+  }
+}
+
+function permDoBanco(r) {
+  return { id: r.id, nome: r.nome, cpf: r.cpf, cnh: r.cnh, numPerm: r.num_perm, vencPerm: r.venc_perm || '', placa: r.placa, modelo: r.modelo, crlv: r.crlv || '', seguro: r.seguro || '', vistoria: r.vistoria || '', tel: r.tel, ponto: r.ponto, situacao: r.situacao, obs: r.obs, wpp: r.wpp_notificado || '' };
+}
+function permParaBanco(p) {
+  return { nome: p.nome, cpf: p.cpf || '', cnh: p.cnh || '', num_perm: p.numPerm || '', venc_perm: p.vencPerm || null, placa: p.placa || '', modelo: p.modelo || '', crlv: p.crlv || null, seguro: p.seguro || null, vistoria: p.vistoria || null, tel: p.tel || '', ponto: p.ponto || '', situacao: p.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: p.obs || '' };
+}
+function fiscDoBanco(r) {
+  return { id: r.id, data: r.data, hora: r.hora, permId: r.perm_id, permissionario: r.permissionario, permissao: r.permissao, placa: r.placa, local: r.local, fiscal: r.fiscal, resultado: r.resultado, pendencias: r.pendencias, checklist: r.checklist };
+}
+function fiscParaBanco(f) {
+  return { data: f.data, hora: f.hora || '', perm_id: f.permId || null, permissionario: f.permissionario, permissao: f.permissao || '', placa: f.placa || '', local: f.local || '', fiscal: f.fiscal || '', resultado: f.resultado, pendencias: f.pendencias || '', checklist: f.checklist || [] };
+}
+
+async function carregarDados() {
+  var r = await Promise.all([
+    selectTudo('permissionarios'),
+    selectTudo('fiscalizacoes'),
+    db(sb.from('configuracoes').select('valor').eq('chave', 'wpp_msg').maybeSingle())
+  ]);
+  permissionarios = r[0].map(permDoBanco);
+  fiscalizacoes = r[1].map(fiscDoBanco);
+  $('wpp-msg').value = (r[2] && r[2].valor) || MSG_PADRAO;
+}
+
+// ---------- login ----------
+var sessaoAtual = null;
+
+function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
+function mostrarLogin(msg, erro) {
+  permissionarios = []; fiscalizacoes = [];
+  fecharFila(); closeModal('modal-perm');
+  $('login').classList.remove('hide');
+  $('lg-form').hidden = false;
+  loginMsg(msg, erro);
+}
+function urlApp() { return location.origin + location.pathname; }
+function traduzErro(e) {
+  var m = e.message || '';
+  if (/invalid login/i.test(m)) return 'E-mail ou senha incorretos.';
+  if (/not confirmed/i.test(m)) return 'Confirme seu e-mail pelo link que enviamos antes de entrar.';
+  if (/already registered/i.test(m)) return 'Esse e-mail já tem cadastro. Use "Entrar" ou "Esqueci a senha".';
+  if (/password/i.test(m) && /least|short|weak/i.test(m)) return 'A senha precisa ter pelo menos 8 caracteres, com letras e números.';
+  if (/rate limit|security purposes/i.test(m)) return 'Muitas tentativas. Aguarde alguns minutos.';
+  if (/fetch|network/i.test(m)) return 'Sem conexão com a internet.';
+  return m;
+}
+
+async function iniciarSessao(session) {
+  if (!session) { mostrarLogin(''); return; }
+  $('lg-form').hidden = true;
+  loginMsg('Carregando dados...');
+  try {
+    var acesso = await db(sb.from('usuarios_autorizados').select('email').maybeSingle());
+    if (!acesso) { await sb.auth.signOut(); mostrarLogin('O e-mail ' + session.user.email + ' não tem acesso ao sistema.', true); return; }
+    await carregarDados();
+    $('user-email').textContent = session.user.email;
+    $('login').classList.add('hide');
+    $('lg-senha').value = '';
+    irPara(paginaAtual);
+    updateBadges();
+    verificarDadosAntigos();
+  } catch (e) {
+    mostrarLogin('Não foi possível carregar os dados: ' + traduzErro(e), true);
+  }
+}
+
+sb.auth.onAuthStateChange(function(evento, session) {
+  // chamadas ao Supabase dentro deste callback travam o cliente; por isso o setTimeout
+  if (evento === 'PASSWORD_RECOVERY') setTimeout(novaSenha, 0);
+  if (evento === 'INITIAL_SESSION' || evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') {
+    var antes = sessaoAtual && sessaoAtual.user.id, agora = session && session.user.id;
+    sessaoAtual = session;
+    if (evento === 'INITIAL_SESSION' || antes !== agora) setTimeout(function() { iniciarSessao(session); }, 0);
+  }
+});
+
+function credenciais() {
+  var email = $('lg-email').value.trim().toLowerCase(), senha = $('lg-senha').value;
+  if (!email) { loginMsg('Informe o e-mail.', true); $('lg-email').focus(); return null; }
+  return { email: email, password: senha };
+}
+async function entrar(ev) {
+  ev.preventDefault();
+  var c = credenciais(); if (!c) return;
+  if (!c.password) { loginMsg('Informe a senha.', true); return; }
+  loginMsg('Entrando...');
+  var r = await sb.auth.signInWithPassword(c);
+  if (r.error) loginMsg(traduzErro(r.error), true);
+}
+async function criarAcesso() {
+  var c = credenciais(); if (!c) return;
+  if (c.password.length < 8) { loginMsg('Escolha uma senha com pelo menos 8 caracteres no campo Senha e clique de novo em "Primeiro acesso".', true); $('lg-senha').focus(); return; }
+  loginMsg('Criando acesso...');
+  var r = await sb.auth.signUp({ email: c.email, password: c.password, options: { emailRedirectTo: urlApp() } });
+  if (r.error) { loginMsg(traduzErro(r.error), true); return; }
+  if (!r.data.session) loginMsg('Enviamos um link de confirmação para ' + c.email + '. Abra o e-mail, clique no link e depois entre aqui com a senha que você escolheu.');
+}
+async function esqueciSenha() {
+  var c = credenciais(); if (!c) return;
+  loginMsg('Enviando...');
+  var r = await sb.auth.resetPasswordForEmail(c.email, { redirectTo: urlApp() });
+  loginMsg(r.error ? traduzErro(r.error) : 'Se esse e-mail tiver acesso, enviamos um link para criar uma nova senha.', !!r.error);
+}
+async function novaSenha() {
+  var s = prompt('Digite a nova senha (mínimo 8 caracteres):');
+  if (!s) return;
+  if (s.length < 8) { alert('A senha precisa ter pelo menos 8 caracteres.'); return novaSenha(); }
+  var r = await sb.auth.updateUser({ password: s });
+  if (r.error) showToast(traduzErro(r.error), true); else showToast('Senha alterada!');
+}
+async function sair() {
+  if (!confirm('Sair do sistema?')) return;
+  await sb.auth.signOut();
+}
 
 // ---------- navegação ----------
 var RENDER = { dashboard: updateDash, permissionarios: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist };
@@ -695,25 +860,29 @@ function salvarPerm() {
     var dono = permissionarios.filter(function(p) { return p.placa === dados.placa && p.id != id; })[0];
     if (dono && !confirm('A placa ' + dados.placa + ' já está cadastrada para ' + dono.nome + '. Salvar mesmo assim?')) return;
   }
-  if (id) {
-    var p = getPerm(id);
-    Object.keys(dados).forEach(function(k) { p[k] = dados[k]; });
-    if (!p.numPerm) p.numPerm = proximoNumPerm();
-  } else {
-    if (!dados.numPerm) dados.numPerm = proximoNumPerm();
-    dados.id = permissionarios.reduce(function(m, p) { return Math.max(m, p.id); }, 0) + 1;
-    permissionarios.push(dados);
-  }
-  save(); closeModal('modal-perm'); refresh();
-  showToast(id ? 'Cadastro atualizado!' : 'Permissionário cadastrado!');
+  if (!dados.numPerm) dados.numPerm = proximoNumPerm();
+  acao(async function() {
+    if (id) {
+      var row = await db(sb.from('permissionarios').update(permParaBanco(dados)).eq('id', id).select().single());
+      permissionarios[permissionarios.indexOf(getPerm(id))] = permDoBanco(row);
+    } else {
+      row = await db(sb.from('permissionarios').insert(permParaBanco(dados)).select().single());
+      permissionarios.push(permDoBanco(row));
+    }
+    closeModal('modal-perm'); refresh();
+    showToast(id ? 'Cadastro atualizado!' : 'Permissionário cadastrado!');
+  });
 }
 
 function excluirPerm() {
   var p = getPerm($('np-id').value);
   if (!p || !confirm('Excluir ' + p.nome + '? O histórico de fiscalizações é mantido.')) return;
-  permissionarios = permissionarios.filter(function(x) { return x.id !== p.id; });
-  delete wppLog[p.id];
-  save(); closeModal('modal-perm'); refresh(); showToast('Permissionário excluído');
+  acao(async function() {
+    await db(sb.from('permissionarios').delete().eq('id', p.id));
+    permissionarios = permissionarios.filter(function(x) { return x.id !== p.id; });
+    fiscalizacoes.forEach(function(f) { if (f.permId === p.id) f.permId = null; });
+    closeModal('modal-perm'); refresh(); showToast('Permissionário excluído');
+  });
 }
 
 // ---------- fiscalização ----------
@@ -726,7 +895,7 @@ function renderFisc() {
   }).join('');
   sel.value = atual;
   if (!$('fd-data').value) setAgora();
-  if (!$('fd-fiscal').value) $('fd-fiscal').value = localStorage.getItem('fiscal') || '';
+  if (!$('fd-fiscal').value) $('fd-fiscal').value = lsGet('fiscal') || '';
 }
 function setAgora() { $('fd-data').value = hojeISO(); $('fd-hora').value = new Date().toTimeString().slice(0, 5); }
 function onFiscPerm() { var p = getPerm($('fd-perm').value); $('fd-placa').value = p ? (p.placa || '') : ''; }
@@ -755,16 +924,20 @@ function salvarFisc() {
   var pend = nok.join(', ');
   if (texto) pend = pend ? pend + ' — ' + texto : texto;
   var fiscal = $('fd-fiscal').value.trim();
-  if (fiscal) localStorage.setItem('fiscal', fiscal);
-  fiscalizacoes.push({
-    id: Date.now(), data: data, hora: $('fd-hora').value,
+  if (fiscal) lsSet('fiscal', fiscal);
+  var f = {
+    data: data, hora: $('fd-hora').value,
     permId: pObj.id, permissionario: pObj.nome, permissao: pObj.numPerm || '—',
     placa: $('fd-placa').value.toUpperCase().replace(/[^A-Z0-9]/g, ''),
     local: $('fd-local').value.trim(), fiscal: fiscal,
     resultado: $('fd-res').value, pendencias: pend || 'Nenhuma',
     checklist: CK_ITEMS.map(function(item, i) { return { item: item, status: checkStates[i] || '' }; })
+  };
+  acao(async function() {
+    var row = await db(sb.from('fiscalizacoes').insert(fiscParaBanco(f)).select().single());
+    fiscalizacoes.push(fiscDoBanco(row));
+    clearFisc(); updateBadges(); showToast('Fiscalização registrada!');
   });
-  save(); clearFisc(); updateBadges(); showToast('Fiscalização registrada!');
 }
 function clearFisc() {
   checkStates = {};
@@ -777,10 +950,23 @@ function clearFisc() {
 function buildMsg(p) {
   return ($('wpp-msg').value || MSG_PADRAO).replace(/{NOME}/g, p.nome).replace(/{PLACA}/g, p.placa || 'sem placa').replace(/{PONTO}/g, p.ponto || '—').replace(/{OBS}/g, p.obs || 'Documentação irregular');
 }
-function salvarMsg() { localStorage.setItem('wppMsg', $('wpp-msg').value); }
-function restaurarMsg() { $('wpp-msg').value = MSG_PADRAO; localStorage.removeItem('wppMsg'); showToast('Mensagem padrão restaurada'); }
+function salvarMsg() {
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(function() {
+    sb.from('configuracoes').upsert({ chave: 'wpp_msg', valor: $('wpp-msg').value }).then(function(r) { if (r.error) falha(r.error); });
+  }, 800);
+}
+function restaurarMsg() {
+  clearTimeout(msgTimer);
+  $('wpp-msg').value = MSG_PADRAO;
+  acao(async function() { await db(sb.from('configuracoes').delete().eq('chave', 'wpp_msg')); showToast('Mensagem padrão restaurada'); });
+}
 
-function marcarEnviado(p) { wppLog[p.id] = hojeISO(); save(); }
+// grava em segundo plano: o WhatsApp precisa abrir no mesmo clique, sem esperar o banco
+function marcarEnviado(p) {
+  p.wpp = hojeISO();
+  sb.from('permissionarios').update({ wpp_notificado: p.wpp }).eq('id', p.id).then(function(r) { if (r.error) falha(r.error); });
+}
 
 function wppUnico(id) {
   var p = getPerm(id);
@@ -794,21 +980,18 @@ function wppUnico(id) {
 
 function renderWpp() {
   var irrList = getIrr();
-  var hoje = permissionarios.filter(enviadoHoje).length;
   $('wst-irr').textContent = irrList.length;
   $('wst-tel').textContent = irrList.filter(function(p) { return telValido(p.tel); }).length;
-  $('wst-env').textContent = hoje;
-  if (!$('wpp-msg').value) $('wpp-msg').value = localStorage.getItem('wppMsg') || MSG_PADRAO;
+  $('wst-env').textContent = permissionarios.filter(enviadoHoje).length;
   $('irr-list').innerHTML = irrList.map(function(p) {
     var telOk = telValido(p.tel);
-    var env = wppLog[p.id];
     if (!telOk) delete selecionados[p.id];
-    return '<div class="irr-item' + (env === hojeISO() ? ' sent' : '') + '">' +
+    return '<div class="irr-item' + (enviadoHoje(p) ? ' sent' : '') + '">' +
       '<button type="button" class="irr-check' + (selecionados[p.id] ? ' checked' : '') + '" onclick="toggleSel(' + p.id + ', this)"' + (telOk ? '' : ' disabled') + ' aria-label="Selecionar ' + esc(p.nome) + '">✓</button>' +
       '<div class="irr-info"><div class="irr-name">' + esc(p.nome) + '</div>' +
       '<div class="irr-sub">' + esc(p.placa || 'sem placa') + ' · ' + esc(p.tel || 'sem telefone') + '</div>' +
       '<div class="irr-obs">' + esc(p.obs || '') + '</div>' +
-      (env !== undefined ? '<div class="irr-sent">✓ Notificado' + (env ? ' em ' + fmtD(env) : '') + '</div>' : '') +
+      (p.wpp ? '<div class="irr-sent">✓ Notificado em ' + fmtD(p.wpp) + '</div>' : '') +
       '</div>' +
       (telOk ? '<button class="btn btn-wpp btn-sm" style="flex-shrink:0" onclick="wppUnico(' + p.id + ')">📱 WPP</button>' : '<span class="no-tel">' + (p.tel ? 'tel. incompleto' : 'sem tel') + '</span>') +
       '</div>';
@@ -944,8 +1127,11 @@ function renderHist() {
 }
 function delFisc(id) {
   if (!confirm('Excluir esta fiscalização?')) return;
-  fiscalizacoes = fiscalizacoes.filter(function(f) { return f.id !== id; });
-  save(); refresh(); showToast('Fiscalização excluída');
+  acao(async function() {
+    await db(sb.from('fiscalizacoes').delete().eq('id', id));
+    fiscalizacoes = fiscalizacoes.filter(function(f) { return f.id !== id; });
+    refresh(); showToast('Fiscalização excluída');
+  });
 }
 
 // ---------- exportação e backup ----------
@@ -959,12 +1145,35 @@ function exportCSV() {
   showToast('CSV exportado!');
 }
 
-// Os dados ficam só neste navegador; o backup permite levar para outro computador ou celular
+// cópia de segurança em arquivo, além do banco
 function exportBackup() {
-  var dados = { app: 'ourotran', versao: 1, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, wppLog: wppLog, wppMsg: localStorage.getItem('wppMsg') || '' };
+  var dados = { app: 'ourotran', versao: 2, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, wppMsg: $('wpp-msg').value === MSG_PADRAO ? '' : $('wpp-msg').value };
   download('ourotran_backup_' + hojeISO() + '.json', JSON.stringify(dados, null, 1), 'application/json');
   showToast('Backup salvo!');
 }
+
+// grava no banco um backup (ou os dados antigos do navegador), mantendo os ids
+async function importarDados(d) {
+  var perms = (d.permissionarios || []).map(function(p) {
+    var r = permParaBanco(p);
+    r.id = p.id;
+    r.wpp_notificado = p.wpp || (d.wppLog && d.wppLog[p.id]) || null;
+    return r;
+  });
+  var ids = {};
+  permissionarios.concat(perms).forEach(function(p) { ids[p.id] = true; });
+  var fiscs = (d.fiscalizacoes || []).map(function(f) {
+    var r = fiscParaBanco(f);
+    r.id = f.id;
+    if (!ids[r.perm_id]) r.perm_id = null;
+    return r;
+  });
+  for (var i = 0; i < perms.length; i += 500) await db(sb.from('permissionarios').upsert(perms.slice(i, i + 500)));
+  for (i = 0; i < fiscs.length; i += 500) await db(sb.from('fiscalizacoes').upsert(fiscs.slice(i, i + 500)));
+  if (d.wppMsg) await db(sb.from('configuracoes').upsert({ chave: 'wpp_msg', valor: d.wppMsg }));
+  await carregarDados();
+}
+
 function importBackup(input) {
   var file = input.files[0];
   input.value = '';
@@ -974,25 +1183,45 @@ function importBackup(input) {
     try {
       var d = JSON.parse(r.result);
       if (d.app !== 'ourotran' || !Array.isArray(d.permissionarios)) throw new Error();
-      if (!confirm('Restaurar backup de ' + new Date(d.gerado).toLocaleString('pt-BR') + '?\n' + d.permissionarios.length + ' permissionários e ' + (d.fiscalizacoes || []).length + ' fiscalizações.\nOs dados atuais deste navegador serão substituídos.')) return;
-      permissionarios = d.permissionarios;
-      fiscalizacoes = d.fiscalizacoes || [];
-      wppLog = d.wppLog || {};
-      if (d.wppMsg) localStorage.setItem('wppMsg', d.wppMsg); else localStorage.removeItem('wppMsg');
-      $('wpp-msg').value = '';
-      save(); refresh(); showToast('Backup restaurado!');
-    } catch (e) { showToast('Arquivo de backup inválido', true); }
+    } catch (e) { showToast('Arquivo de backup inválido', true); return; }
+    if (!confirm('Restaurar backup de ' + new Date(d.gerado).toLocaleString('pt-BR') + '?\n' + d.permissionarios.length + ' permissionários e ' + (d.fiscalizacoes || []).length + ' fiscalizações.\nCadastros com o mesmo número serão substituídos pelos do backup.')) return;
+    acao(async function() { await importarDados(d); refresh(); showToast('Backup restaurado!'); });
   };
   r.readAsText(file);
 }
+
+// ---------- dados da versão antiga (salvos só neste navegador) ----------
+var CAMPOS_COMPARAR = ['nome', 'cpf', 'cnh', 'numPerm', 'vencPerm', 'placa', 'modelo', 'crlv', 'seguro', 'vistoria', 'tel', 'ponto', 'situacao', 'obs'];
+var antigos = null;
+
+function verificarDadosAntigos() {
+  var perm, fisc;
+  var log;
+  try { perm = JSON.parse(lsGet('perm')) || []; fisc = JSON.parse(lsGet('fisc')) || []; log = JSON.parse(lsGet('wppLog')) || {}; } catch (e) { perm = []; fisc = []; log = {}; }
+  var alterados = perm.filter(function(p) {
+    var atual = getPerm(p.id);
+    return !atual || CAMPOS_COMPARAR.some(function(k) { return (p[k] || '') !== (atual[k] || ''); });
+  });
+  if (!alterados.length && !fisc.length) { limparDadosAntigos(); return; }
+  antigos = { permissionarios: alterados, fiscalizacoes: fisc, wppLog: log };
+  var partes = [];
+  if (fisc.length) partes.push(fisc.length + ' fiscalização(ões)');
+  if (alterados.length) partes.push(alterados.length + ' cadastro(s) alterado(s)');
+  $('migra').innerHTML = '<div class="notif-item vencendo" style="align-items:center;flex-wrap:wrap"><div class="notif-icon">💾</div>' +
+    '<div style="flex:1;min-width:200px"><div class="notif-title">Dados da versão antiga encontrados neste navegador</div>' +
+    '<div class="notif-desc">' + partes.join(' e ') + ' ainda não estão no banco.</div></div>' +
+    '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="descartarAntigos()">Descartar</button><button class="btn btn-gold btn-sm" onclick="enviarAntigos()">Enviar para o banco</button></div></div>';
+}
+function limparDadosAntigos() { ['perm', 'fisc', 'wppLog', 'wppEnv', 'wppMsg'].forEach(lsDel); antigos = null; $('migra').innerHTML = ''; }
+function enviarAntigos() {
+  acao(async function() { await importarDados(antigos); limparDadosAntigos(); refresh(); showToast('Dados antigos enviados para o banco!'); });
+}
+function descartarAntigos() { if (confirm('Apagar os dados antigos deste navegador sem enviar?')) limparDadosAntigos(); }
 
 // ---------- teclado ----------
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') { closeModal('modal-perm'); toggleNav(false); }
 });
-
-updateBadges();
-updateDash();
 </script>
 </body>
 </html>
