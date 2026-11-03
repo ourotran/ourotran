@@ -21,6 +21,13 @@ Autoria dos commits: Hugo Marotta.
   - RLS por papel (`privado.papel()`): admin lê/grava tudo; guarda só lê permissionários (regulares e irregulares), sem gravar.
   - Modo guarda no front: `body.modo-guarda` esconde tudo com `.so-admin`; `irPara` força a página `guarda`.
   - Trigger `privado.ajustar_sequencia` avança o contador de ids após importar backup com ids explícitos.
+- Interdições de ruas (Smart City): tabela `interdicoes` (rua, trecho, motivo OBRA/EVENTO/RISCO, sentido, `pontos` =
+  [[lat, lng], ...] na ordem do trânsito, início/fim). Admin grava; guarda lê; **anônimo lê as atuais/futuras** (informação pública).
+  - Edge Function `waze-feed` (código em `supabase/functions/waze-feed/index.ts`, `verify_jwt` desligado, pública):
+    https://hyjhxplpylbaerpkdrnl.supabase.co/functions/v1/waze-feed — feed CIFS do Waze for Cities (JSON; `?formato=xml`).
+    "Reabrir agora" muda o `fim` para agora; o feed mantém a interdição por 2 dias para o Waze ver o novo fim.
+  - Tela "Interdições" no `index.html` (mapa Leaflet + OpenStreetMap) e página pública `interdicoes.html`.
+  - Políticas de admin/guarda usam `to authenticated`: o anônimo não pode avaliar `privado.papel()` (dá erro 401).
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
 - A chave `sb_publishable_...` no código é pública por design; nunca colocar a `service_role` no front-end.
 - O JS usa nomes camelCase (`numPerm`, `vencPerm`, `permId`, `wpp`); a conversão para as colunas fica em

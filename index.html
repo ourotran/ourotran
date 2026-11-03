@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--s3:#252525;--b1:#2a2a2a;--b2:#333;--gold:#c9a84c;--gold2:#e8c96a;--gd:rgba(201,168,76,0.12);--gd2:rgba(201,168,76,0.22);--tx:#f0ede6;--tx2:#9a9590;--tx3:#5c5a56;--red:#e05252;--rd:rgba(224,82,82,0.12);--green:#4caf7d;--gn:rgba(76,175,125,0.12);--amb:#e0a352;--ad:rgba(224,163,82,0.12);--blue:#5294e0;--bd:rgba(82,148,224,0.12);--r:8px;--rl:12px}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -113,6 +114,14 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .ck-item.ok .ck-box{background:var(--green);border-color:var(--green);color:#fff}.ck-item.nok .ck-box{background:var(--red);border-color:var(--red);color:#fff}
 .ck-lbl{font-size:12px;color:var(--tx);line-height:1.3}
 .ck-obs{margin-top:10px;font-style:italic}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.int-mapa{height:420px;border-radius:var(--r);overflow:hidden;background:var(--s2)}
+.int-mapa.desenhando{cursor:crosshair;outline:2px solid var(--gold)}
+.int-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap}
+.int-info{flex:1;min-width:220px}
+.int-rua{font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill.encerrada{background:var(--s3);color:var(--tx3)}
+@media (max-width:860px){.int-mapa{height:320px}}
 .fisc-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .fisc-tab{padding:9px 16px;border-radius:var(--r);border:1px solid var(--b2);background:var(--s1);color:var(--tx2);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
 .fisc-tab:hover{background:var(--s2);color:var(--tx)}
@@ -326,6 +335,7 @@ body.modo-guarda .so-admin{display:none!important}
     <div class="nav-sec">
       <div class="nav-lbl">Operações</div>
       <button class="nav-item so-admin" data-page="fiscalizacao">🔍 Fiscalização</button>
+      <button class="nav-item so-admin" data-page="interdicoes">🚧 Interdições <span class="badge red" id="b-int"></span></button>
       <button class="nav-item so-admin" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp"></span></button>
       <button class="nav-item" data-page="guarda">🛡️ Guarda Municipal <span class="badge red" id="b-guard"></span></button>
       <button class="nav-item so-admin" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif"></span></button>
@@ -559,6 +569,63 @@ body.modo-guarda .so-admin{display:none!important}
       </div>
     </section>
 
+    <!-- INTERDICOES -->
+    <section class="page" id="page-interdicoes">
+      <div class="form-header">
+        <div><div class="form-title">Interdições de Ruas</div><div class="form-sub">FECHAMENTO AUTOMÁTICO NO WAZE</div></div>
+        <div class="btn-group">
+          <a class="btn btn-outline" href="interdicoes.html" target="_blank" rel="noopener">📢 Página pública</a>
+          <button class="btn btn-gold" onclick="novaInt()">+ Nova interdição</button>
+        </div>
+      </div>
+      <div class="card" id="int-form" hidden style="margin-bottom:14px">
+        <div class="sec-title" id="int-form-tit">Nova interdição</div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl" for="it-rua">Rua *</label><input class="fi upper" id="it-rua" placeholder="Ex: Rua Direita"></div>
+          <div class="fg"><label class="fl" for="it-trecho">Trecho</label><input class="fi" id="it-trecho" placeholder="Ex: entre a Praça Tiradentes e a Rua São José"></div>
+          <div class="fg"><label class="fl" for="it-motivo">Motivo</label>
+            <select class="fi" id="it-motivo"><option value="OBRA">🚧 Obra</option><option value="EVENTO">🎉 Evento</option><option value="RISCO">⚠️ Risco / emergência</option></select>
+          </div>
+          <div class="fg"><label class="fl" for="it-sentido">Sentido fechado</label>
+            <select class="fi" id="it-sentido"><option value="BOTH_DIRECTIONS">Os dois sentidos</option><option value="ONE_DIRECTION">Só um sentido (o da ordem dos pontos)</option></select>
+          </div>
+          <div class="fg"><label class="fl" for="it-inicio">Início *</label><input class="fi" type="datetime-local" id="it-inicio"></div>
+          <div class="fg"><label class="fl" for="it-fim">Fim *</label><input class="fi" type="datetime-local" id="it-fim"></div>
+          <div class="fg full"><label class="fl" for="it-desc">Aviso no Waze (curto)</label><input class="fi" id="it-desc" maxlength="40" placeholder="Ex: Procissão — rua fechada"></div>
+        </div>
+        <div class="hint" style="margin-top:12px;line-height:1.6">
+          📍 <b>Marque a rua no mapa abaixo:</b> clique ao longo da rua, <b>na ordem em que o trânsito anda</b>, com um ponto em cada esquina ou curva (mínimo 2). O ponto verde é o começo.
+          <span id="int-npontos" style="color:var(--gold)"></span>
+        </div>
+        <div class="btn-group" style="margin-top:10px">
+          <button type="button" class="btn btn-outline btn-sm" onclick="desfazerPonto()">↶ Desfazer ponto</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="limparPontos()">Limpar pontos</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn btn-outline" onclick="cancelarInt()">Cancelar</button>
+          <button type="button" class="btn btn-gold" onclick="salvarInt()">✔ Salvar interdição</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">🗺️ Mapa <span id="int-mapa-sub">RUAS FECHADAS AGORA (VERMELHO) E PROGRAMADAS (LARANJA)</span></div>
+        <div id="int-mapa" class="int-mapa"></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">Interdições <span id="int-resumo"></span></div>
+        <div id="int-lista"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🔗 Ligação com o Waze <span>WAZE FOR CITIES</span></div>
+        <div class="fg"><label class="fl" for="int-feed">Link do feed (é este endereço que se cadastra no Waze)</label>
+          <div style="display:flex;gap:8px"><input class="fi" id="int-feed" readonly onclick="this.select()"><button class="btn btn-outline" onclick="copiarFeed()">Copiar</button></div>
+        </div>
+        <div class="hint" style="margin-top:12px;line-height:1.7">
+          O Waze lê esse link sozinho de tempos em tempos: interdição salva aqui fecha a rua no Waze em poucos minutos e reabre no horário de fim
+          (ou na hora em que você clicar em <b>Encerrar agora</b>). Para ligar, a prefeitura precisa entrar uma vez no <b>Waze for Cities</b> (gratuito)
+          e cadastrar esse link como feed de interdições (CIFS) no Partner Hub.
+        </div>
+      </div>
+    </section>
+
     <!-- USUARIOS -->
     <section class="page" id="page-usuarios">
       <div class="form-header"><div><div class="form-title">Usuários</div><div class="form-sub">QUEM PODE ENTRAR NO SISTEMA</div></div></div>
@@ -658,6 +725,7 @@ body.modo-guarda .so-admin{display:none!important}
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-ic">✅</span> <span id="toast-msg">OK</span></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // Chave pública do Supabase: pode ficar no código. Quem protege os dados é o login + as regras do banco (RLS).
@@ -689,11 +757,12 @@ var CATS = {
   ESCOLAR: { nome: 'Transporte Escolar', curto: 'Escolar', pag: 'escolar', pre: 'ESC' }
 };
 var CAT_DA_PAG = { permissionarios: 'TAXI', turismo: 'TURISMO', escolar: 'ESCOLAR' };
-var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
+var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], interdicoes: ['Interdições', 'RUAS FECHADAS NO WAZE'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
 
 var permissionarios = [];
 var fiscalizacoes = [];
 var auxiliares = [];
+var interdicoes = [];
 var config = {};
 var catAtual = 'TAXI';
 var checkStates = {};
@@ -796,11 +865,13 @@ async function carregarDados() {
     selectTudo('permissionarios'),
     selectTudo('fiscalizacoes'),
     db(sb.from('configuracoes').select('chave, valor')),
-    selectTudo('motoristas_auxiliares')
+    selectTudo('motoristas_auxiliares'),
+    db(sb.from('interdicoes').select('*').order('inicio', { ascending: false }).limit(500))
   ]);
   permissionarios = r[0].map(permDoBanco);
   fiscalizacoes = r[1].map(fiscDoBanco);
   auxiliares = r[3].map(auxDoBanco);
+  interdicoes = r[4];
   config = {};
   r[2].forEach(function(c) { config[c.chave] = c.valor; });
   $('wpp-msg').value = config.wpp_msg || MSG_PADRAO;
@@ -813,7 +884,7 @@ var sessaoAtual = null;
 
 function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
 function mostrarLogin(msg, erro) {
-  permissionarios = []; fiscalizacoes = []; auxiliares = [];
+  permissionarios = []; fiscalizacoes = []; auxiliares = []; interdicoes = []; editInt = null;
   fecharFila(); closeModal('modal-perm');
   $('login').classList.remove('hide');
   $('lg-form').hidden = false;
@@ -906,7 +977,7 @@ async function sair() {
 }
 
 // ---------- navegação ----------
-var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios };
+var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios, interdicoes: renderInterdicoes };
 var paginaAtual = 'dashboard';
 var papel = 'admin';
 
@@ -939,6 +1010,9 @@ function updateBadges() {
   $('b-guard').textContent = irr;
   $('b-notif').textContent = irr;
   $('b-hist').textContent = fiscalizacoes.length;
+  var nInt = interdicoes.filter(function(i) { return intStatus(i) === 'ativa'; }).length;
+  $('b-int').textContent = nInt || '';
+  $('b-int').hidden = !nInt;
 }
 
 // ---------- dashboard ----------
@@ -1280,6 +1354,165 @@ function limparAbordagem() {
 function clearFisc() {
   limparAbordagem();
   setAgora(); renderFisc();
+}
+
+// ---------- interdições (Waze) ----------
+// A função waze-feed do Supabase publica estas interdições no formato do Waze (CIFS); o Waze lê o link sozinho.
+var FEED_WAZE = SUPABASE_URL + '/functions/v1/waze-feed';
+var MOTIVOS = { OBRA: '🚧 Obra', EVENTO: '🎉 Evento', RISCO: '⚠️ Risco / emergência' };
+var INT_ST = { ativa: ['FECHADA AGORA', 'irregular'], prog: ['PROGRAMADA', 'autuado'], enc: ['ENCERRADA', 'encerrada'] };
+var CENTRO_OP = [-20.3856, -43.5036];
+var mapaInt = null, camadaInt = null;
+var editInt = null; // { id, pontos: [[lat, lng], ...] } enquanto cadastra ou edita
+
+function intStatus(i) {
+  var agora = Date.now();
+  if (new Date(i.fim).getTime() <= agora) return 'enc';
+  return new Date(i.inicio).getTime() > agora ? 'prog' : 'ativa';
+}
+function cor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function paraInputLocal(d) { d = new Date(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function fmtDH(iso) { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
+function renderInterdicoes() {
+  $('int-feed').value = FEED_WAZE;
+  var ordem = { ativa: 0, prog: 1, enc: 2 };
+  var lista = interdicoes.slice().sort(function(a, b) {
+    return ordem[intStatus(a)] - ordem[intStatus(b)] || new Date(a.inicio) - new Date(b.inicio);
+  });
+  var cont = { ativa: 0, prog: 0, enc: 0 };
+  lista.forEach(function(i) { cont[intStatus(i)]++; });
+  $('int-resumo').textContent = cont.ativa + ' FECHADA(S) AGORA · ' + cont.prog + ' PROGRAMADA(S)';
+  $('int-lista').innerHTML = lista.map(function(i) {
+    var s = intStatus(i);
+    return '<div class="int-item"><div class="int-info">' +
+      '<div class="int-rua">' + esc(i.rua) + ' <span class="pill ' + INT_ST[s][1] + '">' + INT_ST[s][0] + '</span></div>' +
+      '<div class="hint">' + esc(MOTIVOS[i.motivo] || i.motivo) + (i.trecho ? ' · ' + esc(i.trecho) : '') + (i.sentido === 'ONE_DIRECTION' ? ' · só um sentido' : '') + '</div>' +
+      '<div class="hint">' + fmtDH(i.inicio) + ' → ' + fmtDH(i.fim) + (i.descricao ? ' · "' + esc(i.descricao) + '"' : '') + '</div></div>' +
+      '<div class="btn-group">' +
+      '<button class="btn btn-outline btn-sm" onclick="verIntNoMapa(' + i.id + ')">🗺️ Ver</button>' +
+      (s !== 'enc' ? '<button class="btn btn-outline btn-sm" onclick="encerrarInt(' + i.id + ')">' + (s === 'ativa' ? '🔓 Reabrir agora' : 'Cancelar') + '</button>' : '') +
+      '<button class="btn btn-outline btn-sm" onclick="editarInt(' + i.id + ')">Editar</button>' +
+      '<button class="btn btn-red btn-sm" onclick="excluirInt(' + i.id + ')" aria-label="Excluir">✕</button></div></div>';
+  }).join('') || vazio('Nenhuma interdição cadastrada. Clique em "+ Nova interdição".');
+  garantirMapa();
+  desenharMapaInt();
+}
+
+// o mapa só pode ser criado com a página visível
+function garantirMapa() {
+  if (!window.L) { $('int-mapa').innerHTML = vazio('Mapa indisponível — verifique a internet e recarregue a página.'); return; }
+  if (!mapaInt) {
+    mapaInt = L.map('int-mapa').setView(CENTRO_OP, 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapaInt);
+    camadaInt = L.layerGroup().addTo(mapaInt);
+    mapaInt.on('click', function(e) {
+      if (!editInt) return;
+      editInt.pontos.push([+e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6)]);
+      desenharMapaInt();
+    });
+  }
+  setTimeout(function() { mapaInt.invalidateSize(); }, 60);
+}
+function desenharMapaInt() {
+  if (!mapaInt) return;
+  camadaInt.clearLayers();
+  $('int-mapa').classList.toggle('desenhando', !!editInt);
+  if (editInt) {
+    var pts = editInt.pontos;
+    if (pts.length > 1) L.polyline(pts, { color: cor('--red'), weight: 6, opacity: .85 }).addTo(camadaInt);
+    pts.forEach(function(p, k) { L.circleMarker(p, { radius: 6, color: k === 0 ? cor('--green') : cor('--red'), fillOpacity: 1 }).addTo(camadaInt); });
+    $('int-npontos').textContent = pts.length ? ' ' + pts.length + ' ponto(s) marcado(s).' : '';
+    $('int-mapa-sub').textContent = 'CLIQUE NO MAPA PARA MARCAR A RUA';
+    return;
+  }
+  $('int-mapa-sub').textContent = 'RUAS FECHADAS AGORA (VERMELHO) E PROGRAMADAS (LARANJA)';
+  interdicoes.filter(function(i) { return intStatus(i) !== 'enc'; }).forEach(function(i) {
+    L.polyline(i.pontos, { color: cor(intStatus(i) === 'ativa' ? '--red' : '--amb'), weight: 7, opacity: .9 })
+      .bindPopup('<b>' + esc(i.rua) + '</b><br>' + esc(MOTIVOS[i.motivo] || '') + '<br>' + fmtDH(i.inicio) + ' → ' + fmtDH(i.fim))
+      .addTo(camadaInt);
+  });
+}
+function verIntNoMapa(id) {
+  var i = interdicoes.filter(function(x) { return x.id === id; })[0];
+  if (!i || !mapaInt) return;
+  mapaInt.fitBounds(i.pontos, { maxZoom: 18, padding: [30, 30] });
+  $('int-mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function abrirFormInt(i) {
+  editInt = { id: i ? i.id : null, pontos: i ? i.pontos.map(function(p) { return p.slice(); }) : [] };
+  $('int-form-tit').textContent = i ? 'Editar interdição' : 'Nova interdição';
+  var agora = new Date(); agora.setSeconds(0, 0);
+  $('it-rua').value = i ? i.rua : '';
+  $('it-trecho').value = i ? i.trecho : '';
+  $('it-motivo').value = i ? i.motivo : 'OBRA';
+  $('it-sentido').value = i ? i.sentido : 'BOTH_DIRECTIONS';
+  $('it-desc').value = i ? i.descricao : '';
+  $('it-inicio').value = paraInputLocal(i ? i.inicio : agora);
+  $('it-fim').value = paraInputLocal(i ? i.fim : agora.getTime() + 4 * 3600 * 1000);
+  $('int-form').hidden = false;
+  desenharMapaInt();
+  if (mapaInt && i) mapaInt.fitBounds(i.pontos, { maxZoom: 18, padding: [30, 30] });
+  document.querySelector('.content').scrollTop = 0;
+  $('it-rua').focus();
+}
+function novaInt() { abrirFormInt(null); }
+function editarInt(id) { abrirFormInt(interdicoes.filter(function(x) { return x.id === id; })[0]); }
+function cancelarInt() { editInt = null; $('int-form').hidden = true; desenharMapaInt(); }
+function desfazerPonto() { if (editInt) { editInt.pontos.pop(); desenharMapaInt(); } }
+function limparPontos() { if (editInt) { editInt.pontos = []; desenharMapaInt(); } }
+
+function salvarInt() {
+  if (!editInt) return;
+  var rua = $('it-rua').value.trim().toUpperCase();
+  var ini = new Date($('it-inicio').value), fim = new Date($('it-fim').value);
+  if (!rua) { showToast('Informe a rua', true); $('it-rua').focus(); return; }
+  if (isNaN(ini) || isNaN(fim)) { showToast('Informe o início e o fim', true); return; }
+  if (fim <= ini) { showToast('O fim precisa ser depois do início', true); $('it-fim').focus(); return; }
+  if (editInt.pontos.length < 2) { showToast('Marque a rua no mapa: pelo menos 2 pontos', true); return; }
+  var dados = {
+    rua: rua, trecho: $('it-trecho').value.trim(), motivo: $('it-motivo').value, sentido: $('it-sentido').value,
+    descricao: $('it-desc').value.trim(), pontos: editInt.pontos, inicio: ini.toISOString(), fim: fim.toISOString()
+  };
+  var id = editInt.id;
+  acao(async function() {
+    var row = id
+      ? await db(sb.from('interdicoes').update(dados).eq('id', id).select().single())
+      : await db(sb.from('interdicoes').insert(dados).select().single());
+    interdicoes = interdicoes.filter(function(x) { return x.id !== row.id; }).concat([row]);
+    cancelarInt(); refresh();
+    showToast('Interdição salva — o Waze atualiza em alguns minutos');
+  });
+}
+// reabrir/cancelar: muda o fim para agora; o feed continua mostrando por 2 dias para o Waze ver o novo fim
+function encerrarInt(id) {
+  var i = interdicoes.filter(function(x) { return x.id === id; })[0];
+  var prog = intStatus(i) === 'prog';
+  if (!confirm((prog ? 'Cancelar a interdição programada da ' : 'Reabrir agora a ') + i.rua + '?')) return;
+  var agora = new Date();
+  var dados = { fim: agora.toISOString() };
+  if (prog) dados.inicio = new Date(agora.getTime() - 60000).toISOString();
+  acao(async function() {
+    var row = await db(sb.from('interdicoes').update(dados).eq('id', id).select().single());
+    interdicoes = interdicoes.filter(function(x) { return x.id !== id; }).concat([row]);
+    refresh(); showToast(prog ? 'Interdição cancelada' : 'Rua reaberta — o Waze atualiza em alguns minutos');
+  });
+}
+function excluirInt(id) {
+  var i = interdicoes.filter(function(x) { return x.id === id; })[0];
+  var aviso = intStatus(i) === 'enc' ? '' : '\n\nAtenção: para tirar do Waze uma rua fechada, use "Reabrir agora". Excluindo, o Waze só reabre a rua no horário de fim.';
+  if (!confirm('Excluir a interdição da ' + i.rua + '?' + aviso)) return;
+  acao(async function() {
+    await db(sb.from('interdicoes').delete().eq('id', id));
+    interdicoes = interdicoes.filter(function(x) { return x.id !== id; });
+    refresh(); showToast('Interdição excluída');
+  });
+}
+function copiarFeed() {
+  var ok = function() { showToast('Link copiado!'); };
+  if (navigator.clipboard) navigator.clipboard.writeText(FEED_WAZE).then(ok, function() { $('int-feed').select(); });
+  else { $('int-feed').select(); document.execCommand('copy'); ok(); }
 }
 
 // ---------- WhatsApp ----------

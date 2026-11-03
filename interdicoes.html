@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d0d">
+<title>OuroTran — Ruas interditadas</title>
+<meta name="description" content="Ruas interditadas em Ouro Preto agora e programadas — OuroTran, Prefeitura de Ouro Preto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--s3:#252525;--b1:#2a2a2a;--b2:#333;--gold:#c9a84c;--tx:#f0ede6;--tx2:#9a9590;--tx3:#5c5a56;--red:#e05252;--rd:rgba(224,82,82,0.12);--amb:#e0a352;--ad:rgba(224,163,82,0.12);--green:#4caf7d;--r:8px;--rl:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh}
+.topo{background:var(--s1);border-bottom:1px solid var(--b1);padding:14px 16px}
+.topo-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo-box{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#0d0d0d}
+.logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px}
+.logo-sub{font-size:9px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;font-weight:500;margin-top:1px}
+.atual{margin-left:auto;font-size:11px;color:var(--tx3)}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.sub{font-size:12px;color:var(--tx2);margin-top:4px;margin-bottom:16px}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.sec{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+#mapa{height:440px;border-radius:var(--r);overflow:hidden;background:var(--s2)}
+.legenda{display:flex;gap:16px;font-size:11px;color:var(--tx2);margin-top:10px;flex-wrap:wrap}
+.legenda i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.item{display:flex;gap:12px;padding:12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px;border-left:3px solid var(--red);cursor:pointer;width:100%;text-align:left;color:inherit;font-family:inherit;border-top:none;border-right:none;border-bottom:none}
+.item.prog{border-left-color:var(--amb)}
+.item:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.rua{font-weight:600;font-size:14px}
+.det{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.5}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-left:6px;vertical-align:middle}
+.pill.ativa{background:var(--rd);color:var(--red)}.pill.prog{background:var(--ad);color:var(--amb)}
+.vazio{color:var(--tx3);font-size:13px;text-align:center;padding:18px}
+.rodape{font-size:11px;color:var(--tx3);text-align:center;margin-top:18px;line-height:1.6}
+@media (max-width:860px){#mapa{height:320px}h1{font-size:19px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-in">
+    <div class="logo-box">
+      <div class="logo-icon">OP</div>
+      <div><div class="logo-name">OUROTRAN</div><div class="logo-sub">Prefeitura de Ouro Preto</div></div>
+    </div>
+    <div class="atual" id="atual">Carregando...</div>
+  </div>
+</header>
+
+<main>
+  <h1>🚧 Ruas interditadas</h1>
+  <div class="sub">Interdições em Ouro Preto agora e as programadas. Estas informações também vão automaticamente para o Waze.</div>
+
+  <div class="card">
+    <div id="mapa"></div>
+    <div class="legenda"><span><i style="background:var(--red)"></i>Fechada agora</span><span><i style="background:var(--amb)"></i>Programada</span></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">⛔ Fechadas agora</div>
+    <div id="lista-ativas"></div>
+  </div>
+  <div class="card">
+    <div class="sec">📅 Programadas</div>
+    <div id="lista-prog"></div>
+  </div>
+
+  <div class="rodape">OuroTran — Superintendência de Transporte de Ouro Preto · (31) 3552-6858<br>A página se atualiza sozinha a cada 2 minutos.</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// Página pública: lê só as interdições atuais e futuras (regra "publico le atuais" no banco). Sem login.
+var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+var MOTIVOS = { OBRA: '🚧 Obra', EVENTO: '🎉 Evento', RISCO: '⚠️ Risco / emergência' };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function cor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function fmtDH(iso) { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+
+var mapa = window.L ? L.map('mapa').setView([-20.3856, -43.5036], 15) : null;
+var camada = null, linhas = {};
+if (mapa) {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapa);
+  camada = L.layerGroup().addTo(mapa);
+} else $('mapa').innerHTML = '<div class="vazio">Mapa indisponível.</div>';
+
+function itemHtml(i, ativa) {
+  return '<button type="button" class="item' + (ativa ? '' : ' prog') + '" onclick="focar(' + i.id + ')"><div>' +
+    '<div class="rua">' + esc(i.rua) + '<span class="pill ' + (ativa ? 'ativa' : 'prog') + '">' + (ativa ? 'FECHADA' : 'PROGRAMADA') + '</span></div>' +
+    '<div class="det">' + esc(MOTIVOS[i.motivo] || '') + (i.trecho ? ' · ' + esc(i.trecho) : '') + (i.sentido === 'ONE_DIRECTION' ? ' · só um sentido' : '') + '</div>' +
+    '<div class="det">' + (ativa ? 'Até ' + fmtDH(i.fim) : fmtDH(i.inicio) + ' até ' + fmtDH(i.fim)) + (i.descricao ? ' · ' + esc(i.descricao) : '') + '</div>' +
+    '</div></button>';
+}
+function focar(id) {
+  if (!mapa || !linhas[id]) return;
+  mapa.fitBounds(linhas[id].getBounds(), { maxZoom: 18, padding: [30, 30] });
+  linhas[id].openPopup();
+  $('mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function carregar() {
+  var r = await sb.from('interdicoes').select('id,rua,trecho,motivo,descricao,sentido,pontos,inicio,fim').gt('fim', new Date().toISOString()).order('inicio');
+  if (r.error) { $('atual').textContent = 'Não foi possível carregar — tente de novo mais tarde'; return; }
+  var agora = Date.now();
+  var ativas = r.data.filter(function(i) { return new Date(i.inicio).getTime() <= agora; });
+  var prog = r.data.filter(function(i) { return new Date(i.inicio).getTime() > agora; });
+  $('lista-ativas').innerHTML = ativas.map(function(i) { return itemHtml(i, true); }).join('') || '<div class="vazio">Nenhuma rua fechada neste momento.</div>';
+  $('lista-prog').innerHTML = prog.map(function(i) { return itemHtml(i, false); }).join('') || '<div class="vazio">Nenhuma interdição programada.</div>';
+  if (mapa) {
+    camada.clearLayers(); linhas = {};
+    r.data.forEach(function(i) {
+      var ativa = new Date(i.inicio).getTime() <= agora;
+      linhas[i.id] = L.polyline(i.pontos, { color: cor(ativa ? '--red' : '--amb'), weight: 7, opacity: .9 })
+        .bindPopup('<b>' + esc(i.rua) + '</b><br>' + esc(MOTIVOS[i.motivo] || '') + '<br>' + fmtDH(i.inicio) + ' → ' + fmtDH(i.fim))
+        .addTo(camada);
+    });
+  }
+  $('atual').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+carregar();
+setInterval(carregar, 120000);
+</script>
+</body>
+</html>
