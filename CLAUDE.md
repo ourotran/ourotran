@@ -11,6 +11,11 @@ Autoria dos commits: Hugo Marotta.
   - `permissionarios` (coluna `categoria`: `TAXI`, `TURISMO` = jipes/jardineiras, `ESCOLAR` = vans), `fiscalizacoes`,
     `configuracoes` (`wpp_msg` = mensagem do WhatsApp; `guarda_tel` e `guarda_email` = contato da Guarda).
   - `usuarios_autorizados`: e-mail + `papel` (`admin` ou `guarda`). Criar conta no login não dá acesso sem estar nessa tabela.
+    O gatilho `privado.antes_de_criar_usuario` (em `auth.users`) recusa cadastro de e-mail fora da lista e já confirma os da lista,
+    por isso "Primeiro acesso" entra na hora, sem e-mail.
+- Senha: "Esqueci a senha" manda o link do Supabase para `trocar-senha.html` (página separada, mesmo visual do login),
+  que também serve para quem já está logado trocar a senha. Se o link cair no `index.html`, ele repassa o `#hash` para lá.
+  No Supabase, Site URL e Redirect URLs apontam para https://ourotran.github.io/ourotran/ (antes era localhost:3000).
   - RLS por papel (`privado.papel()`): admin lê/grava tudo; guarda só lê permissionários (regulares e irregulares), sem gravar.
   - Modo guarda no front: `body.modo-guarda` esconde tudo com `.so-admin`; `irPara` força a página `guarda`.
   - Trigger `privado.ajustar_sequencia` avança o contador de ids após importar backup com ids explícitos.

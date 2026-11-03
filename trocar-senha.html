@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d0d">
+<title>OuroTran — Troca de senha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--b2:#333;--gold:#c9a84c;--gold2:#e8c96a;--tx:#f0ede6;--tx2:#9a9590;--tx3:#5c5a56;--red:#e05252;--green:#4caf7d;--r:8px;--rl:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+.login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rl);padding:28px;width:360px;max-width:100%}
+.logo-box{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#0d0d0d}
+.logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px}
+.logo-sub{font-size:9px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;font-weight:500;margin-top:1px}
+.titulo{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-top:22px}
+.quem{font-size:12px;color:var(--tx2);margin-top:4px;overflow-wrap:anywhere}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:11px;color:var(--tx2);letter-spacing:.5px;font-weight:500}
+.fi{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;width:100%;color-scheme:dark}
+.fi:focus{border-color:var(--gold)}
+.btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn-gold{background:var(--gold);color:#0d0d0d}.btn-gold:hover{background:var(--gold2)}
+.btn:disabled{opacity:.6;cursor:progress}
+.login-links{display:flex;justify-content:space-between;margin-top:14px}
+.login-msg{font-size:12px;color:var(--tx2);min-height:18px;margin-top:14px;line-height:1.5}
+.login-msg.err{color:var(--red)}
+.login-msg.ok{color:var(--green)}
+.link-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-family:inherit;padding:0;text-decoration:none}
+.link-btn:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="login">
+  <div class="login-box">
+    <div class="logo-box">
+      <div class="logo-icon">OP</div>
+      <div>
+        <div class="logo-name">OUROTRAN</div>
+        <div class="logo-sub">Fiscalização de Transportes</div>
+      </div>
+    </div>
+    <div class="titulo">Troca de senha</div>
+    <div class="quem" id="ts-quem"></div>
+    <form id="ts-form" onsubmit="trocar(event)" hidden style="margin-top:18px">
+      <div class="fg" style="margin-bottom:12px"><label class="fl" for="ts-senha">Nova senha</label><input class="fi" type="password" id="ts-senha" autocomplete="new-password" minlength="8"></div>
+      <div class="fg"><label class="fl" for="ts-senha2">Repita a nova senha</label><input class="fi" type="password" id="ts-senha2" autocomplete="new-password" minlength="8"></div>
+      <button class="btn btn-gold" id="ts-btn" style="width:100%;margin-top:16px">Salvar nova senha</button>
+    </form>
+    <div class="login-msg" id="ts-msg">Verificando o link...</div>
+    <div class="login-links"><a class="link-btn" href="./">← Voltar para o OuroTran</a></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// Chega aqui pelo link "Esqueci a senha" do e-mail (#access_token=...&type=recovery)
+// ou pelo botão "Trocar senha" de quem já está logado.
+var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
+
+function $(id) { return document.getElementById(id); }
+function msg(t, tipo) { var m = $('ts-msg'); m.textContent = t || ''; m.className = 'login-msg' + (tipo ? ' ' + tipo : ''); }
+
+// erro do próprio link (expirado ou já usado) vem no hash; lê antes do cliente limpar a URL
+var hashErro = new URLSearchParams(location.hash.slice(1));
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var pronto = false;
+
+function mostrarForm(session) {
+  if (pronto) return;
+  pronto = true;
+  $('ts-quem').textContent = session.user.email;
+  $('ts-form').hidden = false;
+  msg('Escolha a nova senha (mínimo 8 caracteres, com letras e números).');
+  $('ts-senha').focus();
+}
+function semLink() {
+  if (pronto) return;
+  if (hashErro.get('error_code') === 'otp_expired' || hashErro.get('error'))
+    msg('Este link expirou ou já foi usado. Volte ao OuroTran, digite seu e-mail e clique em "Esqueci a senha" para receber outro. Abra o link novo assim que ele chegar.', 'err');
+  else
+    msg('Abra esta página pelo link "Esqueci a senha" enviado ao seu e-mail.', 'err');
+}
+
+sb.auth.onAuthStateChange(function(evento, session) {
+  if (session && (evento === 'PASSWORD_RECOVERY' || evento === 'INITIAL_SESSION' || evento === 'SIGNED_IN')) setTimeout(function() { mostrarForm(session); }, 0);
+  else if (evento === 'INITIAL_SESSION') setTimeout(semLink, 0);
+});
+
+async function trocar(ev) {
+  ev.preventDefault();
+  var s = $('ts-senha').value, s2 = $('ts-senha2').value;
+  if (s.length < 8) { msg('A senha precisa ter pelo menos 8 caracteres.', 'err'); $('ts-senha').focus(); return; }
+  if (!/[a-z]/i.test(s) || !/\d/.test(s)) { msg('Use letras e números na senha.', 'err'); $('ts-senha').focus(); return; }
+  if (s !== s2) { msg('As duas senhas não são iguais.', 'err'); $('ts-senha2').focus(); return; }
+  $('ts-btn').disabled = true;
+  msg('Salvando...');
+  var r = await sb.auth.updateUser({ password: s });
+  $('ts-btn').disabled = false;
+  if (r.error) {
+    var m = r.error.message || '';
+    if (/different from the old/i.test(m)) msg('A nova senha precisa ser diferente da antiga.', 'err');
+    else if (/least|short|weak/i.test(m)) msg('A senha precisa ter pelo menos 8 caracteres, com letras e números.', 'err');
+    else if (/fetch|network/i.test(m)) msg('Sem conexão com a internet.', 'err');
+    else msg(m, 'err');
+    return;
+  }
+  $('ts-form').hidden = true;
+  msg('Senha alterada! Abrindo o OuroTran...', 'ok');
+  setTimeout(function() { location.replace('./'); }, 1500);
+}
+</script>
+</body>
+</html>

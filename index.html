@@ -236,7 +236,8 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
 .link-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-family:inherit;padding:0}
 .link-btn:hover{text-decoration:underline}
 .user-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
-.user-line span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-line span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-line .link-btn{white-space:nowrap;text-decoration:none}
 body.busy,body.busy *{cursor:progress!important}
 
 /* MODO GUARDA: só consulta de irregulares */
@@ -328,7 +329,7 @@ body.modo-guarda .so-admin{display:none!important}
     </div>
   </nav>
   <div class="sidebar-footer">OuroTran v4.0 · 2026<br>Prefeitura de Ouro Preto — OuroTran
-    <div class="user-line"><span id="user-email"></span><button class="link-btn" onclick="sair()">Sair</button></div>
+    <div class="user-line"><span id="user-email"></span><a class="link-btn" href="trocar-senha.html">Trocar senha</a><button class="link-btn" onclick="sair()">Sair</button></div>
   </div>
 </aside>
 
@@ -532,7 +533,7 @@ body.modo-guarda .so-admin{display:none!important}
           </div>
           <div class="fg full"><button class="btn btn-gold" style="justify-self:start">+ Adicionar</button></div>
         </form>
-        <div class="hint" style="margin-top:12px;line-height:1.6">Depois de adicionar, a pessoa abre o sistema, digita esse e-mail e uma senha nova, clica em <b>Primeiro acesso</b> e confirma pelo link que chega no e-mail.</div>
+        <div class="hint" style="margin-top:12px;line-height:1.6">Depois de adicionar, a pessoa abre o sistema, digita esse e-mail e uma senha nova, clica em <b>Primeiro acesso</b> e já entra, sem precisar abrir e-mail. Se esquecer a senha, clica em <b>Esqueci a senha</b> e recebe o link da página <b>Troca de senha</b>.</div>
       </div>
       <div class="card">
         <div class="sec-title">Com acesso</div>
@@ -618,6 +619,8 @@ body.modo-guarda .so-admin{display:none!important}
 // Chave pública do Supabase: pode ficar no código. Quem protege os dados é o login + as regras do banco (RLS).
 var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
+// link de "Esqueci a senha" (ou o erro dele) que caiu na página principal vai para a troca de senha
+if (/type=recovery|error_code=/.test(location.hash)) location.replace('trocar-senha.html' + location.hash);
 var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // checklist da fiscalização muda conforme o tipo do veículo escolhido
@@ -754,12 +757,15 @@ function mostrarLogin(msg, erro) {
   loginMsg(msg, erro);
 }
 function urlApp() { return location.origin + location.pathname; }
+function urlTrocaSenha() { return location.origin + location.pathname.replace(/[^/]*$/, '') + 'trocar-senha.html'; }
 function traduzErro(e) {
   var m = e.message || '';
   if (/invalid login/i.test(m)) return 'E-mail ou senha incorretos.';
   if (/not confirmed/i.test(m)) return 'Confirme seu e-mail pelo link que enviamos antes de entrar.';
   if (/already registered/i.test(m)) return 'Esse e-mail já tem cadastro. Use "Entrar" ou "Esqueci a senha".';
   if (/password/i.test(m) && /least|short|weak/i.test(m)) return 'A senha precisa ter pelo menos 8 caracteres, com letras e números.';
+  if (/database error saving new user|nao_autorizado/i.test(m)) return 'Esse e-mail não tem acesso ao sistema. Peça ao administrador para cadastrá-lo na tela Usuários.';
+  if (/email rate limit/i.test(m)) return 'Já enviamos e-mails demais nesta última hora. Tente de novo mais tarde ou peça ao administrador.';
   if (/rate limit|security purposes/i.test(m)) return 'Muitas tentativas. Aguarde alguns minutos.';
   if (/fetch|network/i.test(m)) return 'Sem conexão com a internet.';
   return m;
@@ -788,7 +794,7 @@ async function iniciarSessao(session) {
 
 sb.auth.onAuthStateChange(function(evento, session) {
   // chamadas ao Supabase dentro deste callback travam o cliente; por isso o setTimeout
-  if (evento === 'PASSWORD_RECOVERY') setTimeout(novaSenha, 0);
+  if (evento === 'PASSWORD_RECOVERY') { location.replace(urlTrocaSenha()); return; }
   if (evento === 'INITIAL_SESSION' || evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') {
     var antes = sessaoAtual && sessaoAtual.user.id, agora = session && session.user.id;
     sessaoAtual = session;
@@ -813,25 +819,23 @@ async function criarAcesso() {
   var c = credenciais(); if (!c) return;
   if (c.password.length < 8) { loginMsg('Escolha uma senha com pelo menos 8 caracteres no campo Senha e clique de novo em "Primeiro acesso".', true); $('lg-senha').focus(); return; }
   loginMsg('Criando acesso...');
+  // o gatilho privado.antes_de_criar_usuario só aceita e-mails de usuarios_autorizados e já os confirma,
+  // então a senha vale na hora, sem precisar abrir o e-mail
   var r = await sb.auth.signUp({ email: c.email, password: c.password, options: { emailRedirectTo: urlApp() } });
   if (r.error) { loginMsg(traduzErro(r.error), true); return; }
-  // para e-mail já cadastrado o Supabase não dá erro: devolve o usuário sem identidades e não envia e-mail
+  // para e-mail já cadastrado o Supabase não dá erro: devolve o usuário sem identidades
   var jaExiste = r.data.user && r.data.user.identities && !r.data.user.identities.length;
-  if (jaExiste) loginMsg('Esse e-mail já tem cadastro. Clique em "Entrar" (ou em "Esqueci a senha").', true);
-  else if (!r.data.session) loginMsg('Enviamos um link de confirmação para ' + c.email + '. Abra o e-mail, clique no link e depois entre aqui com a senha que você escolheu.');
+  if (jaExiste) { loginMsg('Esse e-mail já tem cadastro. Clique em "Entrar" com sua senha, ou em "Esqueci a senha" para receber o link de troca.', true); return; }
+  if (r.data.session) return;
+  loginMsg('Acesso criado! Entrando...');
+  var e = await sb.auth.signInWithPassword(c);
+  if (e.error) loginMsg(traduzErro(e.error), true);
 }
 async function esqueciSenha() {
   var c = credenciais(); if (!c) return;
   loginMsg('Enviando...');
-  var r = await sb.auth.resetPasswordForEmail(c.email, { redirectTo: urlApp() });
-  loginMsg(r.error ? traduzErro(r.error) : 'Se esse e-mail tiver acesso, enviamos um link para criar uma nova senha.', !!r.error);
-}
-async function novaSenha() {
-  var s = prompt('Digite a nova senha (mínimo 8 caracteres):');
-  if (!s) return;
-  if (s.length < 8) { alert('A senha precisa ter pelo menos 8 caracteres.'); return novaSenha(); }
-  var r = await sb.auth.updateUser({ password: s });
-  if (r.error) showToast(traduzErro(r.error), true); else showToast('Senha alterada!');
+  var r = await sb.auth.resetPasswordForEmail(c.email, { redirectTo: urlTrocaSenha() });
+  loginMsg(r.error ? traduzErro(r.error) : 'Se esse e-mail tiver acesso, enviamos o link "Troca de senha OuroTran". Abra o e-mail (veja também o spam) e clique no link logo que chegar.', !!r.error);
 }
 async function sair() {
   if (!confirm('Sair do sistema?')) return;
