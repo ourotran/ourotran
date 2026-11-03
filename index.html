@@ -112,6 +112,22 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .ck-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .15s}
 .ck-item.ok .ck-box{background:var(--green);border-color:var(--green);color:#fff}.ck-item.nok .ck-box{background:var(--red);border-color:var(--red);color:#fff}
 .ck-lbl{font-size:12px;color:var(--tx);line-height:1.3}
+.ck-obs{margin-top:10px;font-style:italic}
+.fisc-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.fisc-tab{padding:9px 16px;border-radius:var(--r);border:1px solid var(--b2);background:var(--s1);color:var(--tx2);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.fisc-tab:hover{background:var(--s2);color:var(--tx)}
+.fisc-tab.active{background:var(--gd);border-color:var(--gold);color:var(--gold)}
+.fisc-tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.selagem{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:14px;padding-top:14px;border-top:1px solid var(--b1)}
+.aux-bloco{margin-top:14px;padding:14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r)}
+.aux-bloco .ck-item{background:var(--s1)}
+.aux-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.aux-head .btn{margin-left:auto}
+.aux-bloco .form-grid{margin-bottom:12px}
+.perm-aux{margin-top:14px;padding-top:12px;border-top:1px solid var(--b1)}
+.aux-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border-radius:var(--r);margin-bottom:6px;font-size:12px}
+.aux-item .aux-nome{flex:1;min-width:0}
+@media (max-width:860px){.selagem{grid-template-columns:1fr}}
 
 /* TABLE */
 .tbl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
@@ -417,20 +433,42 @@ body.modo-guarda .so-admin{display:none!important}
           <button class="btn btn-gold" onclick="salvarFisc()">✔ Registrar</button>
         </div>
       </div>
+      <div class="fisc-tabs" role="tablist" aria-label="Tipo de transporte">
+        <button type="button" class="fisc-tab" role="tab" data-cat="TAXI" onclick="trocarTipoFisc('TAXI')">🚕 Táxi</button>
+        <button type="button" class="fisc-tab" role="tab" data-cat="TURISMO" onclick="trocarTipoFisc('TURISMO')">🚙 Jipes e Jardineiras</button>
+        <button type="button" class="fisc-tab" role="tab" data-cat="ESCOLAR" onclick="trocarTipoFisc('ESCOLAR')">🚐 Transporte Escolar</button>
+      </div>
       <div class="card" style="margin-bottom:14px">
         <div class="sec-title">Identificação da Abordagem</div>
         <div class="form-grid">
           <div class="fg"><label class="fl" for="fd-data">Data</label><input class="fi" type="date" id="fd-data"></div>
           <div class="fg"><label class="fl" for="fd-hora">Hora</label><input class="fi" type="time" id="fd-hora"></div>
-          <div class="fg"><label class="fl" for="fd-perm">Permissionário</label><select class="fi" id="fd-perm" onchange="onFiscPerm()"><option value="">Selecione...</option></select></div>
+          <div class="fg"><label class="fl" for="fd-perm">Permissionário — <span id="fd-perm-tipo">Táxi</span></label><select class="fi" id="fd-perm" onchange="onFiscPerm()"><option value="">Selecione...</option></select></div>
           <div class="fg"><label class="fl" for="fd-placa">Placa</label><input class="fi upper" type="text" id="fd-placa" placeholder="ABC1D23" maxlength="8"></div>
           <div class="fg"><label class="fl" for="fd-local">Local da Abordagem</label><input class="fi" type="text" id="fd-local" placeholder="Ex: Praça Tiradentes"></div>
           <div class="fg"><label class="fl" for="fd-fiscal">Fiscal Responsável</label><input class="fi" type="text" id="fd-fiscal" placeholder="Seu nome"></div>
         </div>
       </div>
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">Checklist de Conformidade — <span id="ck-tipo">Táxi</span> <span style="margin-left:auto">Toque: OK → NOK → limpar</span></div>
+        <div class="sec-title">Checklist do Permissionário — <span id="ck-tipo">Táxi</span> <span style="margin-left:auto">Toque: OK → NOK → limpar</span></div>
         <div class="ck-grid" id="checklist"></div>
+        <div class="hint ck-obs" id="ck-obs"></div>
+        <div class="selagem">
+          <div class="fg"><label class="fl" for="fd-selado">Veículo selado?</label>
+            <select class="fi" id="fd-selado" onchange="onSelado()"><option value="">❌ Não selado</option><option value="true">🔖 Selado</option></select>
+          </div>
+          <div class="fg" id="fd-dsel-box" hidden><label class="fl" for="fd-dsel">Data da selagem</label><input class="fi" type="date" id="fd-dsel"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">Motorista Auxiliar <span>MESMOS DOCUMENTOS DO PERMISSIONÁRIO</span></div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl" for="fd-temaux">Tem motorista auxiliar?</label>
+            <select class="fi" id="fd-temaux" onchange="onTemAux()"><option value="">Não</option><option value="S">Sim</option></select>
+          </div>
+        </div>
+        <div id="aux-lista"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="aux-mais" onclick="addAux()" hidden style="margin-top:12px">+ Outro motorista auxiliar</button>
       </div>
       <div class="card">
         <div class="sec-title">Resultado &amp; Observações</div>
@@ -594,11 +632,17 @@ body.modo-guarda .so-admin{display:none!important}
       <div class="fg"><label class="fl" for="np-sit">Situação</label>
         <select class="fi" id="np-sit"><option value="REGULAR">✅ Regular</option><option value="IRREGULAR">❌ Irregular</option></select>
       </div>
+      <div class="fg"><label class="fl" for="np-selado">Selagem</label>
+        <select class="fi" id="np-selado"><option value="">❌ Não selado</option><option value="true">🔖 Selado</option></select>
+      </div>
+      <div class="fg"><label class="fl" for="np-dsel">Data da selagem</label><input class="fi" type="date" id="np-dsel"></div>
       <div class="fg full"><label class="fl" for="np-obs">Observações</label><input class="fi upper" id="np-obs" placeholder="Ex: FALTA DOCUMENTAÇÃO 2026"></div>
     </div>
+    <div class="perm-aux" id="np-aux"></div>
     <div class="modal-foot">
       <button class="btn btn-red" id="np-del" onclick="excluirPerm()">Excluir</button>
       <div class="spacer"></div>
+      <button class="btn btn-outline" id="np-fisc" onclick="fiscalizarPerm($('np-id').value)">🔍 Fiscalizar</button>
       <button class="btn btn-outline" onclick="closeModal('modal-perm')">Cancelar</button>
       <button class="btn btn-gold" onclick="salvarPerm()">Salvar</button>
     </div>
@@ -623,11 +667,17 @@ var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
 if (/type=recovery|error_code=/.test(location.hash)) location.replace('trocar-senha.html' + location.hash);
 var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// checklist da fiscalização muda conforme o tipo do veículo escolhido
+// checklist da fiscalização: documentos exigidos pela OuroTran para cada tipo (folhas de documentação de 2026).
+// Os motoristas auxiliares apresentam os mesmos documentos do permissionário.
 var CK_ITENS = {
-  TAXI: ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'],
-  TURISMO: ['CNH do condutor (categoria compatível)', 'CRLV em dia', 'Autorização municipal de turismo', 'Selo de vistoria 2026', 'Seguro de passageiros (APP)', 'Cintos e itens de segurança dos passageiros', 'Lotação dentro do permitido', 'Pneus, freios e iluminação', 'Extintor de incêndio', 'Identificação visual do veículo'],
-  ESCOLAR: ['CNH categoria D + curso de transporte escolar', 'Autorização municipal de transporte escolar', 'Autorização do DETRAN (vistoria semestral)', 'CRLV em dia', 'Seguro de passageiros (APP)', 'Faixa "ESCOLAR" pintada na carroceria', 'Cronotacógrafo funcionando', 'Cinto de segurança em todos os bancos', 'Monitor(a) acompanhando os alunos', 'Lotação dentro do permitido', 'Extintor de incêndio', 'Selo de vistoria 2026']
+  TAXI: ['Certidão de antecedentes criminais (obrigatório)', 'Atestado médico (só para vencidos — validade 12 meses)', 'Certidão negativa de débitos (obrigatório)', '02 fotos 3x4 (troca de motorista auxiliar)', 'Comprovante de residência', 'Comprovante de ISSQN', 'Cópia da CNH com atividade remunerada', 'Cópia dos documentos do veículo e vistoria (validade 12 meses)'],
+  TURISMO: ['Certidão de antecedentes criminais', 'Atestado médico (só para vencidos — validade 12 meses)', 'Certidão negativa de débitos', '2 fotos 3x4', 'Comprovante de residência', 'Comprovante de ISSQN', 'Cópia da CNH com atividade remunerada', 'Cópia dos documentos do veículo', 'Vistoria mecânica INMETRO', 'CADASTUR'],
+  ESCOLAR: ['Certidão de antecedentes criminais', 'Atestado médico (só para vencidos — validade 12 meses)', 'Certidão negativa de débitos', '2 fotos 3x4', 'Comprovante de residência', 'Comprovante de ISSQN', 'Cópia da CNH com atividade remunerada', 'Cópia dos documentos do veículo e vistoria (validade 12 meses)', 'Curso de transporte escolar', 'Documentos do monitor (quando necessário)']
+};
+var CK_OBS = {
+  TAXI: 'Veículos 0 km não precisam apresentar laudo de vistoria.',
+  TURISMO: 'As documentações exigidas se aplicam também aos motoristas auxiliares.',
+  ESCOLAR: 'Veículos 0 km não precisam apresentar laudo de vistoria, somente a nota fiscal.'
 };
 var ckCat = 'TAXI';
 function ckItens() { return CK_ITENS[ckCat]; }
@@ -643,9 +693,12 @@ var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionar
 
 var permissionarios = [];
 var fiscalizacoes = [];
+var auxiliares = [];
 var config = {};
 var catAtual = 'TAXI';
 var checkStates = {};
+// motoristas auxiliares da fiscalização em andamento: { auxId, nome, cpf, cnh, tel, endereco, ck: {índice: 'ok'|'nok'} }
+var fiscAux = [];
 var selecionados = {};
 var fila = [];
 var toastTimer = null;
@@ -664,6 +717,8 @@ function catTag(p) { return '<span class="cat-tag ' + p.categoria + '">' + esc(C
 function daCat(cat) { return permissionarios.filter(function(p) { return p.categoria === cat; }); }
 function getIrr() { return permissionarios.filter(isIrr); }
 function getPerm(id) { return permissionarios.filter(function(x) { return x.id == id; })[0]; }
+function getAux(id) { return auxiliares.filter(function(x) { return x.id == id; })[0]; }
+function auxDoPerm(permId) { return auxiliares.filter(function(a) { return a.permId == permId; }); }
 function cleanTel(t) { return t ? String(t).replace(/\D/g, '') : ''; }
 // celular com DDD = 11 dígitos começando em 9; fixo = 10 dígitos
 function telValido(t) { var d = cleanTel(t); return (d.length === 11 && d[2] === '9') || (d.length === 10 && /[2-5]/.test(d[2])); }
@@ -718,26 +773,34 @@ async function selectTudo(tabela) {
 }
 
 function permDoBanco(r) {
-  return { id: r.id, categoria: r.categoria || 'TAXI', nome: r.nome, cpf: r.cpf, cnh: r.cnh, numPerm: r.num_perm, vencPerm: r.venc_perm || '', placa: r.placa, modelo: r.modelo, crlv: r.crlv || '', seguro: r.seguro || '', vistoria: r.vistoria || '', tel: r.tel, ponto: r.ponto, situacao: r.situacao, obs: r.obs, wpp: r.wpp_notificado || '' };
+  return { id: r.id, categoria: r.categoria || 'TAXI', nome: r.nome, cpf: r.cpf, cnh: r.cnh, numPerm: r.num_perm, vencPerm: r.venc_perm || '', placa: r.placa, modelo: r.modelo, crlv: r.crlv || '', seguro: r.seguro || '', vistoria: r.vistoria || '', tel: r.tel, ponto: r.ponto, situacao: r.situacao, obs: r.obs, wpp: r.wpp_notificado || '', selado: r.selado ? 'true' : '', dataSelagem: r.data_selagem || '' };
 }
 function permParaBanco(p) {
-  return { categoria: CATS[p.categoria] ? p.categoria : 'TAXI', nome: p.nome, cpf: p.cpf || '', cnh: p.cnh || '', num_perm: p.numPerm || '', venc_perm: p.vencPerm || null, placa: p.placa || '', modelo: p.modelo || '', crlv: p.crlv || null, seguro: p.seguro || null, vistoria: p.vistoria || null, tel: p.tel || '', ponto: p.ponto || '', situacao: p.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: p.obs || '' };
+  return { categoria: CATS[p.categoria] ? p.categoria : 'TAXI', nome: p.nome, cpf: p.cpf || '', cnh: p.cnh || '', num_perm: p.numPerm || '', venc_perm: p.vencPerm || null, placa: p.placa || '', modelo: p.modelo || '', crlv: p.crlv || null, seguro: p.seguro || null, vistoria: p.vistoria || null, tel: p.tel || '', ponto: p.ponto || '', situacao: p.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: p.obs || '', selado: p.selado === 'true', data_selagem: p.selado === 'true' && p.dataSelagem || null };
 }
 function fiscDoBanco(r) {
-  return { id: r.id, data: r.data, hora: r.hora, permId: r.perm_id, permissionario: r.permissionario, permissao: r.permissao, placa: r.placa, local: r.local, fiscal: r.fiscal, resultado: r.resultado, pendencias: r.pendencias, checklist: r.checklist };
+  return { id: r.id, data: r.data, hora: r.hora, permId: r.perm_id, permissionario: r.permissionario, permissao: r.permissao, placa: r.placa, local: r.local, fiscal: r.fiscal, resultado: r.resultado, pendencias: r.pendencias, checklist: r.checklist, categoria: r.categoria || 'TAXI', selado: !!r.selado, dataSelagem: r.data_selagem || '', auxiliares: r.auxiliares || [] };
 }
 function fiscParaBanco(f) {
-  return { data: f.data, hora: f.hora || '', perm_id: f.permId || null, permissionario: f.permissionario, permissao: f.permissao || '', placa: f.placa || '', local: f.local || '', fiscal: f.fiscal || '', resultado: f.resultado, pendencias: f.pendencias || '', checklist: f.checklist || [] };
+  return { data: f.data, hora: f.hora || '', perm_id: f.permId || null, permissionario: f.permissionario, permissao: f.permissao || '', placa: f.placa || '', local: f.local || '', fiscal: f.fiscal || '', resultado: f.resultado, pendencias: f.pendencias || '', checklist: f.checklist || [], categoria: CATS[f.categoria] ? f.categoria : 'TAXI', selado: !!f.selado, data_selagem: f.selado && f.dataSelagem || null, auxiliares: f.auxiliares || [] };
+}
+function auxDoBanco(r) {
+  return { id: r.id, permId: r.perm_id, nome: r.nome, cpf: r.cpf, cnh: r.cnh, tel: r.tel, endereco: r.endereco, situacao: r.situacao, obs: r.obs, ultimaFisc: r.ultima_fiscalizacao || '' };
+}
+function auxParaBanco(a) {
+  return { perm_id: a.permId, nome: a.nome, cpf: a.cpf || '', cnh: a.cnh || '', tel: a.tel || '', endereco: a.endereco || '', situacao: a.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: a.obs || '', ultima_fiscalizacao: a.ultimaFisc || null };
 }
 
 async function carregarDados() {
   var r = await Promise.all([
     selectTudo('permissionarios'),
     selectTudo('fiscalizacoes'),
-    db(sb.from('configuracoes').select('chave, valor'))
+    db(sb.from('configuracoes').select('chave, valor')),
+    selectTudo('motoristas_auxiliares')
   ]);
   permissionarios = r[0].map(permDoBanco);
   fiscalizacoes = r[1].map(fiscDoBanco);
+  auxiliares = r[3].map(auxDoBanco);
   config = {};
   r[2].forEach(function(c) { config[c.chave] = c.valor; });
   $('wpp-msg').value = config.wpp_msg || MSG_PADRAO;
@@ -750,7 +813,7 @@ var sessaoAtual = null;
 
 function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
 function mostrarLogin(msg, erro) {
-  permissionarios = []; fiscalizacoes = [];
+  permissionarios = []; fiscalizacoes = []; auxiliares = [];
   fecharFila(); closeModal('modal-perm');
   $('login').classList.remove('hide');
   $('lg-form').hidden = false;
@@ -917,6 +980,7 @@ function renderPerm() {
   $('perm-grid').innerHTML = list.map(function(p) {
     var irr = isIrr(p);
     var ini = p.nome.split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('');
+    var nAux = auxDoPerm(p.id);
     var tel = p.tel ? (telValido(p.tel) ? esc(p.tel) : esc(p.tel) + ' <span class="perm-det warn">(número incompleto)</span>') : '—';
     return '<div class="perm-card' + (irr ? ' irregular-card' : '') + '" tabindex="0" role="button" onclick="abrirPerm(' + p.id + ')" onkeydown="if(event.key===\'Enter\')abrirPerm(' + p.id + ')">' +
       '<div class="perm-head"><div class="perm-avatar' + (irr ? ' irr' : '') + '">' + esc(ini) + '</div>' +
@@ -924,6 +988,8 @@ function renderPerm() {
       '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong>' + (p.modelo ? ' · ' + esc(p.modelo) : '') + '</div>' +
       '<div class="perm-det">📍 ' + esc(p.ponto || '—') + '</div>' +
       '<div class="perm-det">📱 ' + tel + '</div>' +
+      '<div class="perm-det">' + (p.selado ? '🔖 Selado em ' + fmtD(p.dataSelagem) : '⬜ Não selado') + '</div>' +
+      (nAux.length ? '<div class="perm-det">👥 ' + nAux.length + ' motorista' + (nAux.length > 1 ? 's' : '') + ' auxiliar' + (nAux.length > 1 ? 'es' : '') + (nAux.some(function(a) { return a.situacao === 'IRREGULAR'; }) ? ' <span class="perm-det warn">(com pendência)</span>' : '') + '</div>' : '') +
       (p.obs ? '<div class="perm-obs">' + esc(p.obs) + '</div>' : '') +
       '<div class="perm-foot"><span class="perm-status ' + (irr ? 'ps-irr' : 'ps-ok') + '">' + (irr ? 'IRREGULAR' : 'REGULAR') + '</span>' +
       (irr && telValido(p.tel) ? '<button class="btn btn-wpp btn-sm" onclick="event.stopPropagation();wppUnico(' + p.id + ')">📱 WPP</button>' : '') +
@@ -931,19 +997,45 @@ function renderPerm() {
   }).join('');
 }
 
-var PERM_CAMPOS = { categoria: 'np-cat', nome: 'np-nome', cpf: 'np-cpf', cnh: 'np-cnh', numPerm: 'np-perm', vencPerm: 'np-vp', placa: 'np-placa', modelo: 'np-modelo', crlv: 'np-crlv', seguro: 'np-seg', vistoria: 'np-vis', tel: 'np-tel', ponto: 'np-ponto', situacao: 'np-sit', obs: 'np-obs' };
+var PERM_CAMPOS = { categoria: 'np-cat', nome: 'np-nome', cpf: 'np-cpf', cnh: 'np-cnh', numPerm: 'np-perm', vencPerm: 'np-vp', placa: 'np-placa', modelo: 'np-modelo', crlv: 'np-crlv', seguro: 'np-seg', vistoria: 'np-vis', tel: 'np-tel', ponto: 'np-ponto', situacao: 'np-sit', obs: 'np-obs', selado: 'np-selado', dataSelagem: 'np-dsel' };
 
 function abrirPerm(id) {
   var p = id ? getPerm(id) : null;
   $('np-id').value = p ? p.id : '';
   $('mp-title').textContent = p ? 'Editar Permissionário' : 'Novo Permissionário';
   $('np-del').style.display = p ? '' : 'none';
+  $('np-fisc').style.display = p ? '' : 'none';
   var padrao = { situacao: 'REGULAR', categoria: catAtual };
   Object.keys(PERM_CAMPOS).forEach(function(k) { $(PERM_CAMPOS[k]).value = p ? (p[k] || '') : (padrao[k] || ''); });
+  renderAuxPerm(p);
   var pontos = {};
   permissionarios.forEach(function(x) { if (x.ponto) pontos[x.ponto] = 1; });
   $('pontos-list').innerHTML = Object.keys(pontos).sort().map(function(x) { return '<option value="' + esc(x) + '">'; }).join('');
   showModal('modal-perm');
+}
+
+// motoristas auxiliares do permissionário (cadastrados e conferidos pela tela de Fiscalização)
+function renderAuxPerm(p) {
+  var lista = p ? auxDoPerm(p.id) : [];
+  $('np-aux').hidden = !p;
+  if (!p) return;
+  $('np-aux').innerHTML = '<div class="sec-title">👥 Motoristas auxiliares <span>' + lista.length + ' CADASTRADO' + (lista.length === 1 ? '' : 'S') + '</span></div>' +
+    (lista.map(function(a) {
+      var irr = a.situacao === 'IRREGULAR';
+      return '<div class="aux-item"><div class="aux-nome"><strong>' + esc(a.nome) + '</strong><div class="hint">' + esc([a.cpf && 'CPF ' + a.cpf, a.cnh && 'CNH ' + a.cnh, a.tel, a.endereco].filter(Boolean).join(' · ') || 'sem dados') + '</div>' +
+        (a.obs ? '<div class="hint" style="font-style:italic">' + esc(a.obs) + (a.ultimaFisc ? ' · ' + fmtD(a.ultimaFisc) : '') + '</div>' : '') + '</div>' +
+        '<span class="pill ' + (irr ? 'irregular' : 'regular') + '">' + (irr ? 'IRREGULAR' : 'REGULAR') + '</span>' +
+        '<button class="btn btn-red btn-sm so-admin" onclick="excluirAux(' + a.id + ')" aria-label="Excluir ' + esc(a.nome) + '">✕</button></div>';
+    }).join('') || '<div class="hint">Nenhum. Para incluir, clique em 🔍 Fiscalizar e marque "Tem motorista auxiliar? Sim".</div>');
+}
+function excluirAux(id) {
+  var a = getAux(id);
+  if (!a || !confirm('Excluir o motorista auxiliar ' + a.nome + '?')) return;
+  acao(async function() {
+    await db(sb.from('motoristas_auxiliares').delete().eq('id', id));
+    auxiliares = auxiliares.filter(function(x) { return x.id !== id; });
+    renderAuxPerm(getPerm(a.permId)); refresh(); showToast('Motorista auxiliar excluído');
+  });
 }
 
 function proximoNumPerm(cat) {
@@ -990,70 +1082,204 @@ function excluirPerm() {
 }
 
 // ---------- fiscalização ----------
+// cada tipo de transporte tem sua aba: a lista de permissionários e o checklist de documentos mudam juntos
 function renderFisc() {
-  renderCK();
+  document.querySelectorAll('.fisc-tab').forEach(function(b) {
+    var on = b.dataset.cat === ckCat;
+    b.classList.toggle('active', on); b.setAttribute('aria-selected', on);
+  });
+  $('fd-perm-tipo').textContent = CATS[ckCat].nome;
   var sel = $('fd-perm'), atual = sel.value;
-  var ordenados = permissionarios.slice().sort(function(a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
+  var ordenados = daCat(ckCat).sort(function(a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
   sel.innerHTML = '<option value="">Selecione...</option>' + ordenados.map(function(p) {
-    return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + esc(p.placa || 'sem placa') + ' (' + esc(CATS[p.categoria].curto) + ')' + (isIrr(p) ? ' [IRREGULAR]' : '') + '</option>';
+    return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + esc(p.placa || 'sem placa') + (isIrr(p) ? ' [IRREGULAR]' : '') + '</option>';
   }).join('');
   sel.value = atual;
+  renderCK(); renderAux();
   if (!$('fd-data').value) setAgora();
   if (!$('fd-fiscal').value) $('fd-fiscal').value = lsGet('fiscal') || '';
 }
 function setAgora() { $('fd-data').value = hojeISO(); $('fd-hora').value = new Date().toTimeString().slice(0, 5); }
+function trocarTipoFisc(cat) {
+  if (cat === ckCat) return;
+  if ((fiscAux.length || Object.keys(checkStates).length) && !confirm('Trocar de tipo apaga o checklist preenchido. Continuar?')) return;
+  ckCat = cat;
+  limparAbordagem();
+  renderFisc();
+}
+// atalho do cadastro: abre a fiscalização já com o permissionário escolhido
+function fiscalizarPerm(id) {
+  var p = getPerm(id);
+  if (!p) return;
+  closeModal('modal-perm');
+  ckCat = p.categoria;
+  limparAbordagem();
+  irPara('fiscalizacao');
+  $('fd-perm').value = p.id;
+  onFiscPerm();
+}
 function onFiscPerm() {
   var p = getPerm($('fd-perm').value);
   $('fd-placa').value = p ? (p.placa || '') : '';
-  var cat = p ? p.categoria : 'TAXI';
-  if (cat !== ckCat) { ckCat = cat; checkStates = {}; renderCK(); }
+  $('fd-selado').value = p ? p.selado : '';
+  $('fd-dsel').value = p ? p.dataSelagem : '';
+  onSelado();
+  // os auxiliares já cadastrados desse permissionário entram prontos para conferir
+  fiscAux = p ? auxDoPerm(p.id).map(auxDaFicha) : [];
+  $('fd-temaux').value = fiscAux.length ? 'S' : '';
+  renderAux();
+}
+function onSelado() {
+  var selado = $('fd-selado').value === 'true';
+  $('fd-dsel-box').hidden = !selado;
+  if (selado && !$('fd-dsel').value) $('fd-dsel').value = $('fd-data').value || hojeISO();
 }
 
-function renderCK() {
-  $('ck-tipo').textContent = CATS[ckCat].nome;
-  $('checklist').innerHTML = ckItens().map(function(item, i) {
-    var st = checkStates[i] || '';
-    return '<button type="button" class="ck-item ' + st + '" onclick="toggleCK(' + i + ')" aria-label="' + esc(item) + ': ' + (st || 'não verificado') + '"><div class="ck-box">' + (st === 'ok' ? '✓' : st === 'nok' ? '✕' : '') + '</div><div class="ck-lbl">' + esc(item) + '</div></button>';
+// checklist: toque alterna OK → NOK → em branco
+function proximoEstado(cur) { return !cur ? 'ok' : cur === 'ok' ? 'nok' : ''; }
+function nokDe(estados) { return ckItens().filter(function(_, i) { return estados[i] === 'nok'; }); }
+function checklistDe(estados) { return ckItens().map(function(item, i) { return { item: item, status: estados[i] || '' }; }); }
+function ckHtml(estados, chamada) {
+  return ckItens().map(function(item, i) {
+    var st = estados[i] || '';
+    return '<button type="button" class="ck-item ' + st + '" onclick="' + chamada(i) + '" aria-label="' + esc(item) + ': ' + (st || 'não verificado') + '"><div class="ck-box">' + (st === 'ok' ? '✓' : st === 'nok' ? '✕' : '') + '</div><div class="ck-lbl">' + esc(item) + '</div></button>';
   }).join('');
 }
+function renderCK() {
+  $('ck-tipo').textContent = CATS[ckCat].nome;
+  $('checklist').innerHTML = ckHtml(checkStates, function(i) { return 'toggleCK(' + i + ')'; });
+  $('ck-obs').textContent = 'OBS: ' + CK_OBS[ckCat];
+}
 function toggleCK(i) {
-  var cur = checkStates[i];
-  checkStates[i] = !cur ? 'ok' : cur === 'ok' ? 'nok' : '';
-  renderCK();
-  // algum item NOK sugere resultado irregular
-  var temNok = ckItens().some(function(_, j) { return checkStates[j] === 'nok'; });
+  checkStates[i] = proximoEstado(checkStates[i]);
+  renderCK(); sugerirResultado();
+}
+// algum item NOK (do permissionário ou de um auxiliar) sugere resultado irregular
+function sugerirResultado() {
+  var temNok = nokDe(checkStates).length || fiscAux.some(function(a) { return nokDe(a.ck).length; });
   if (temNok && $('fd-res').value === 'Regular') $('fd-res').value = 'Irregular';
 }
 
+// ---------- motoristas auxiliares na fiscalização ----------
+function auxNovo() { return { auxId: '', nome: '', cpf: '', cnh: '', tel: '', endereco: '', ck: {} }; }
+function auxDaFicha(a) { return { auxId: a.id, nome: a.nome, cpf: a.cpf, cnh: a.cnh, tel: a.tel, endereco: a.endereco, ck: {} }; }
+function onTemAux() {
+  if ($('fd-temaux').value === 'S') {
+    if (!fiscAux.length) fiscAux.push(auxNovo());
+  } else if (fiscAux.length) {
+    if (!confirm('Tirar o motorista auxiliar desta fiscalização?')) { $('fd-temaux').value = 'S'; return; }
+    fiscAux = [];
+  }
+  renderAux();
+}
+function renderAux() {
+  var p = getPerm($('fd-perm').value);
+  var cad = p ? auxDoPerm(p.id) : [];
+  $('aux-mais').hidden = !fiscAux.length;
+  $('aux-lista').innerHTML = fiscAux.map(function(a, n) {
+    function campo(k, rotulo, extra) {
+      return '<div class="fg' + (k === 'endereco' ? ' full' : '') + '"><label class="fl" for="ax-' + k + '-' + n + '">' + rotulo + '</label>' +
+        '<input class="fi' + (k === 'nome' || k === 'endereco' ? ' upper' : '') + '" id="ax-' + k + '-' + n + '" value="' + esc(a[k]) + '" oninput="auxCampo(' + n + ',\'' + k + '\',this.value)"' + (extra || '') + '></div>';
+    }
+    var escolha = cad.length ? '<div class="fg" style="margin-bottom:12px"><label class="fl" for="ax-sel-' + n + '">Cadastro</label><select class="fi" id="ax-sel-' + n + '" onchange="escolherAux(' + n + ',this.value)">' +
+      '<option value="">+ Novo motorista auxiliar</option>' + cad.map(function(c) {
+        return '<option value="' + c.id + '"' + (c.id == a.auxId ? ' selected' : '') + '>' + esc(c.nome) + (c.situacao === 'IRREGULAR' ? ' [IRREGULAR]' : '') + '</option>';
+      }).join('') + '</select></div>' : '';
+    return '<div class="aux-bloco"><div class="aux-head">👤 Motorista auxiliar ' + (n + 1) + '<button type="button" class="btn btn-outline btn-sm" onclick="removerAux(' + n + ')">Remover</button></div>' + escolha +
+      '<div class="form-grid">' + campo('nome', 'Nome completo *') + campo('cpf', 'CPF', ' placeholder="000.000.000-00" inputmode="numeric"') + campo('cnh', 'CNH', ' inputmode="numeric"') +
+      campo('tel', 'Telefone', ' placeholder="(31) 99999-9999" inputmode="tel"') + campo('endereco', 'Endereço', ' placeholder="Rua, número, bairro"') + '</div>' +
+      '<div class="fl" style="margin-bottom:8px">Checklist do motorista auxiliar — ' + esc(CATS[ckCat].nome) + '</div>' +
+      '<div class="ck-grid">' + ckHtml(a.ck, function(i) { return 'toggleAuxCK(' + n + ',' + i + ')'; }) + '</div></div>';
+  }).join('');
+}
+function auxCampo(n, k, v) { fiscAux[n][k] = v; }
+function escolherAux(n, id) { var c = getAux(id); fiscAux[n] = c ? auxDaFicha(c) : auxNovo(); renderAux(); }
+function addAux() { fiscAux.push(auxNovo()); renderAux(); }
+function removerAux(n) {
+  fiscAux.splice(n, 1);
+  if (!fiscAux.length) $('fd-temaux').value = '';
+  renderAux();
+}
+function toggleAuxCK(n, i) {
+  var ck = fiscAux[n].ck;
+  ck[i] = proximoEstado(ck[i]);
+  renderAux(); sugerirResultado();
+}
+
+// registra a fiscalização e atualiza o cadastro: situação (regular/irregular), observação, selagem e auxiliares
 function salvarFisc() {
   var pObj = getPerm($('fd-perm').value);
   var data = $('fd-data').value;
   if (!pObj || !data) { showToast('Informe o permissionário e a data', true); return; }
-  var nok = ckItens().filter(function(_, i) { return checkStates[i] === 'nok'; });
+  var selado = $('fd-selado').value === 'true';
+  var dSel = selado ? $('fd-dsel').value : '';
+  if (selado && !dSel) { showToast('Informe a data da selagem', true); $('fd-dsel').focus(); return; }
+  var auxs = $('fd-temaux').value === 'S' ? fiscAux : [];
+  for (var n = 0; n < auxs.length; n++) {
+    if (!auxs[n].nome.trim()) { showToast('Informe o nome do motorista auxiliar ' + (n + 1), true); $('ax-nome-' + n).focus(); return; }
+    if (auxs[n].tel.trim() && !telValido(auxs[n].tel)) { showToast('Telefone do motorista auxiliar ' + (n + 1) + ' incompleto — confira o DDD e o 9', true); $('ax-tel-' + n).focus(); return; }
+  }
+  var partes = [];
+  var nok = nokDe(checkStates);
+  if (nok.length) partes.push(nok.join(', '));
+  auxs.forEach(function(a) {
+    var an = nokDe(a.ck);
+    if (an.length) partes.push('Auxiliar ' + a.nome.trim().toUpperCase() + ': ' + an.join(', '));
+  });
   var texto = $('fd-pend').value.trim();
-  var pend = nok.join(', ');
-  if (texto) pend = pend ? pend + ' — ' + texto : texto;
+  if (texto) partes.push(texto);
+  var pend = partes.join(' — ');
+  var resultado = $('fd-res').value;
+  var regular = resultado === 'Regular';
   var fiscal = $('fd-fiscal').value.trim();
   if (fiscal) lsSet('fiscal', fiscal);
   var f = {
-    data: data, hora: $('fd-hora').value,
+    data: data, hora: $('fd-hora').value, categoria: ckCat,
     permId: pObj.id, permissionario: pObj.nome, permissao: pObj.numPerm || '—',
     placa: $('fd-placa').value.toUpperCase().replace(/[^A-Z0-9]/g, ''),
     local: $('fd-local').value.trim(), fiscal: fiscal,
-    resultado: $('fd-res').value, pendencias: pend || 'Nenhuma',
-    checklist: ckItens().map(function(item, i) { return { item: item, status: checkStates[i] || '' }; })
+    resultado: resultado, pendencias: pend || 'Nenhuma',
+    checklist: checklistDe(checkStates),
+    selado: selado, dataSelagem: dSel, auxiliares: []
   };
+  var obs = (regular ? 'DOCUMENTAÇÃO EM DIA' : 'PENDENTE: ' + (pend || resultado).toUpperCase()) +
+    (selado ? ' · SELADO EM ' + fmtD(dSel) : ' · NÃO SELADO') + ' · FISCALIZADO EM ' + fmtD(data);
   acao(async function() {
-    var row = await db(sb.from('fiscalizacoes').insert(fiscParaBanco(f)).select().single());
-    fiscalizacoes.push(fiscDoBanco(row));
-    clearFisc(); updateBadges(); showToast('Fiscalização registrada!');
+    // 1) cadastro de cada motorista auxiliar (novo ou atualizado) com a situação desta fiscalização
+    for (var n = 0; n < auxs.length; n++) {
+      var a = auxs[n], an = nokDe(a.ck);
+      var dados = {
+        permId: pObj.id, nome: a.nome.trim().toUpperCase(), cpf: a.cpf.trim(), cnh: a.cnh.trim(), tel: a.tel.trim(), endereco: a.endereco.trim().toUpperCase(),
+        situacao: an.length ? 'IRREGULAR' : 'REGULAR', obs: an.length ? 'PENDENTE: ' + an.join(', ').toUpperCase() : 'DOCUMENTAÇÃO EM DIA', ultimaFisc: data
+      };
+      var row = a.auxId
+        ? await db(sb.from('motoristas_auxiliares').update(auxParaBanco(dados)).eq('id', a.auxId).select().single())
+        : await db(sb.from('motoristas_auxiliares').insert(auxParaBanco(dados)).select().single());
+      var salvo = auxDoBanco(row);
+      if (a.auxId) auxiliares[auxiliares.indexOf(getAux(a.auxId))] = salvo; else auxiliares.push(salvo);
+      a.auxId = salvo.id;
+      f.auxiliares.push({ auxId: salvo.id, nome: salvo.nome, cpf: salvo.cpf, cnh: salvo.cnh, tel: salvo.tel, endereco: salvo.endereco, situacao: salvo.situacao, checklist: checklistDe(a.ck) });
+    }
+    // 2) a fiscalização
+    var rowF = await db(sb.from('fiscalizacoes').insert(fiscParaBanco(f)).select().single());
+    fiscalizacoes.push(fiscDoBanco(rowF));
+    // 3) o cadastro do permissionário passa a mostrar o resultado na aba do tipo dele
+    var dadosPerm = Object.assign({}, pObj, { situacao: regular ? 'REGULAR' : 'IRREGULAR', obs: obs, selado: selado ? 'true' : '', dataSelagem: dSel });
+    var rowP = await db(sb.from('permissionarios').update(permParaBanco(dadosPerm)).eq('id', pObj.id).select().single());
+    permissionarios[permissionarios.indexOf(pObj)] = permDoBanco(rowP);
+    clearFisc(); updateBadges();
+    showToast('Fiscalização registrada — ' + pObj.nome + ' agora está ' + (regular ? 'REGULAR' : 'IRREGULAR'));
   });
 }
-function clearFisc() {
-  checkStates = {}; ckCat = 'TAXI';
-  ['fd-perm', 'fd-placa', 'fd-local', 'fd-pend'].forEach(function(id) { $(id).value = ''; });
+function limparAbordagem() {
+  checkStates = {}; fiscAux = [];
+  ['fd-perm', 'fd-placa', 'fd-local', 'fd-pend', 'fd-selado', 'fd-dsel', 'fd-temaux'].forEach(function(id) { $(id).value = ''; });
   $('fd-res').value = 'Regular';
-  setAgora(); renderCK();
+  onSelado();
+}
+function clearFisc() {
+  limparAbordagem();
+  setAgora(); renderFisc();
 }
 
 // ---------- WhatsApp ----------
@@ -1159,6 +1385,10 @@ function renderGuarda() {
     var irr = achados.filter(isIrr)[0];
     if (irr) res = '<div class="g-resultado irr">⛔ Placa ' + esc(qPlaca) + ' (' + esc(CATS[irr.categoria].curto) + '): IRREGULAR — veículo não pode circular' + (irr.obs ? '<br><small>' + esc(irr.obs) + '</small>' : '') + '</div>';
     else if (achados.length) res = '<div class="g-resultado ok">✅ Placa ' + esc(qPlaca) + ' (' + esc(CATS[achados[0].categoria].curto) + '): REGULAR — ' + esc(achados[0].nome) + '</div>';
+    // quem pode estar dirigindo: os motoristas auxiliares desse veículo e a situação de cada um
+    var auxPlaca = achados.length ? auxDoPerm(achados[0].id) : [];
+    if (auxPlaca.length) res += '<div class="g-resultado ' + (auxPlaca.some(function(a) { return a.situacao === 'IRREGULAR'; }) ? 'irr' : 'ok') + '">👥 Motoristas auxiliares: ' +
+      auxPlaca.map(function(a) { return esc(a.nome) + ' — ' + esc(a.situacao); }).join('; ') + '</div>';
     else res = '<div class="g-resultado irr">⚠️ Placa ' + esc(qPlaca) + ' não está cadastrada na OuroTran (táxi, turismo ou escolar)</div>';
   }
   $('g-resultado').innerHTML = res;
@@ -1303,7 +1533,10 @@ function renderHist() {
   }).reverse();
   if (!rows.length) { $('hist-table').innerHTML = '<tr><td colspan="8"><div class="empty">' + (fiscalizacoes.length ? 'Nenhum resultado para o filtro' : 'Nenhuma fiscalização registrada') + '</div></td></tr>'; return; }
   $('hist-table').innerHTML = rows.map(function(f) {
-    return '<tr><td style="white-space:nowrap">' + fmtD(f.data) + '<br><span style="color:var(--tx3);font-size:11px">' + esc(f.hora || '') + '</span></td><td><strong>' + esc(f.permissionario) + '</strong></td><td><span class="placa">' + esc(f.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + esc(f.local || '—') + '</td><td style="font-size:12px;color:var(--tx2)">' + esc(f.fiscal || '—') + '</td><td style="font-size:11px;color:var(--tx2)">' + esc(f.pendencias || '—') + '</td><td><span class="pill ' + resClass(f.resultado) + '">' + esc(f.resultado) + '</span></td><td><button class="btn btn-red btn-sm" onclick="delFisc(' + f.id + ')" aria-label="Excluir">✕</button></td></tr>';
+    return '<tr><td style="white-space:nowrap">' + fmtD(f.data) + '<br><span style="color:var(--tx3);font-size:11px">' + esc(f.hora || '') + '</span></td><td><strong>' + esc(f.permissionario) + '</strong> ' + catTag(f) +
+      '<div style="font-size:11px;color:var(--tx3)">' + (f.selado ? '🔖 Selado em ' + fmtD(f.dataSelagem) : '⬜ Não selado') + '</div>' +
+      (f.auxiliares || []).map(function(a) { return '<div style="font-size:11px;color:var(--tx3)">👤 Auxiliar: ' + esc(a.nome) + ' — <span style="color:var(--' + (a.situacao === 'IRREGULAR' ? 'red' : 'green') + ')">' + esc(a.situacao) + '</span></div>'; }).join('') +
+      '</td><td><span class="placa">' + esc(f.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + esc(f.local || '—') + '</td><td style="font-size:12px;color:var(--tx2)">' + esc(f.fiscal || '—') + '</td><td style="font-size:11px;color:var(--tx2)">' + esc(f.pendencias || '—') + '</td><td><span class="pill ' + resClass(f.resultado) + '">' + esc(f.resultado) + '</span></td><td><button class="btn btn-red btn-sm" onclick="delFisc(' + f.id + ')" aria-label="Excluir">✕</button></td></tr>';
   }).join('');
 }
 function delFisc(id) {
@@ -1318,9 +1551,10 @@ function delFisc(id) {
 // ---------- exportação e backup ----------
 function exportCSV() {
   if (!fiscalizacoes.length) { showToast('Nenhuma fiscalização para exportar', true); return; }
-  var header = ['Data', 'Hora', 'Permissionário', 'Permissão', 'Placa', 'Local', 'Fiscal', 'Pendências', 'Resultado'];
+  var header = ['Data', 'Hora', 'Tipo', 'Permissionário', 'Permissão', 'Placa', 'Local', 'Fiscal', 'Selado', 'Data da selagem', 'Motoristas auxiliares', 'Pendências', 'Resultado'];
   var lines = [header].concat(fiscalizacoes.map(function(f) {
-    return [fmtD(f.data), f.hora || '', f.permissionario, f.permissao || '', f.placa || '', f.local || '', f.fiscal || '', f.pendencias || '', f.resultado];
+    var auxTxt = (f.auxiliares || []).map(function(a) { return a.nome + ' (' + a.situacao + ')'; }).join(', ');
+    return [fmtD(f.data), f.hora || '', CATS[f.categoria].curto, f.permissionario, f.permissao || '', f.placa || '', f.local || '', f.fiscal || '', f.selado ? 'Sim' : 'Não', f.selado ? fmtD(f.dataSelagem) : '', auxTxt, f.pendencias || '', f.resultado];
   })).map(function(row) { return row.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); });
   download('ourotran_historico_' + hojeISO() + '.csv', '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8');
   showToast('CSV exportado!');
@@ -1328,7 +1562,7 @@ function exportCSV() {
 
 // cópia de segurança em arquivo, além do banco
 function exportBackup() {
-  var dados = { app: 'ourotran', versao: 2, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, wppMsg: $('wpp-msg').value === MSG_PADRAO ? '' : $('wpp-msg').value };
+  var dados = { app: 'ourotran', versao: 2, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, motoristasAuxiliares: auxiliares, wppMsg: $('wpp-msg').value === MSG_PADRAO ? '' : $('wpp-msg').value };
   download('ourotran_backup_' + hojeISO() + '.json', JSON.stringify(dados, null, 1), 'application/json');
   showToast('Backup salvo!');
 }
@@ -1351,6 +1585,8 @@ async function importarDados(d) {
   });
   for (var i = 0; i < perms.length; i += 500) await db(sb.from('permissionarios').upsert(perms.slice(i, i + 500)));
   for (i = 0; i < fiscs.length; i += 500) await db(sb.from('fiscalizacoes').upsert(fiscs.slice(i, i + 500)));
+  var auxs = (d.motoristasAuxiliares || []).filter(function(a) { return ids[a.permId]; }).map(function(a) { var r = auxParaBanco(a); r.id = a.id; return r; });
+  for (i = 0; i < auxs.length; i += 500) await db(sb.from('motoristas_auxiliares').upsert(auxs.slice(i, i + 500)));
   if (d.wppMsg) await db(sb.from('configuracoes').upsert({ chave: 'wpp_msg', valor: d.wppMsg }));
   await carregarDados();
 }

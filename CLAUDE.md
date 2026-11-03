@@ -8,7 +8,9 @@ Autoria dos commits: Hugo Marotta.
 
 - `index.html`: todo o front-end (HTML + CSS + JavaScript puro, sem build). Usa `@supabase/supabase-js` pelo CDN.
 - Banco: Supabase, projeto `ourotran` (id `hyjhxplpylbaerpkdrnl`, região São Paulo).
-  - `permissionarios` (coluna `categoria`: `TAXI`, `TURISMO` = jipes/jardineiras, `ESCOLAR` = vans), `fiscalizacoes`,
+  - `permissionarios` (coluna `categoria`: `TAXI`, `TURISMO` = jipes/jardineiras, `ESCOLAR` = vans; `selado` + `data_selagem`),
+    `fiscalizacoes` (`categoria`, `selado`, `data_selagem`, `auxiliares` = cópia dos auxiliares conferidos com o checklist de cada um),
+    `motoristas_auxiliares` (quem dirige para o permissionário: nome, CPF, CNH, telefone, endereço, situação; `perm_id` com cascade),
     `configuracoes` (`wpp_msg` = mensagem do WhatsApp; `guarda_tel` e `guarda_email` = contato da Guarda).
   - `usuarios_autorizados`: e-mail + `papel` (`admin` ou `guarda`). Criar conta no login não dá acesso sem estar nessa tabela.
     O gatilho `privado.antes_de_criar_usuario` (em `auth.users`) recusa cadastro de e-mail fora da lista e já confirma os da lista,
@@ -27,7 +29,10 @@ Autoria dos commits: Hugo Marotta.
 ## Abas
 
 Dashboard · Táxis / Jipes e Jardineiras / Transporte Escolar (a mesma tela `page-permissionarios`, filtrada por
-`catAtual`; `CATS` e `CAT_DA_PAG` ligam aba e categoria) · Fiscalização (checklist OK/NOK próprio de cada tipo, em `CK_ITENS`) · WhatsApp (fila de envio,
+`catAtual`; `CATS` e `CAT_DA_PAG` ligam aba e categoria) · Fiscalização (uma aba por tipo, `ckCat`; checklist OK/NOK
+com os documentos exigidos de cada tipo em `CK_ITENS`/`CK_OBS`; selagem; motoristas auxiliares em `fiscAux`, com o mesmo
+checklist; ao registrar, `salvarFisc` grava os auxiliares, a fiscalização e atualiza situação/observação/selagem do
+permissionário) · WhatsApp (fila de envio,
 uma conversa por clique, porque o navegador bloqueia várias janelas) · Guarda Municipal (consulta de placa em todos os
 tipos, filtro por tipo, impressão/PDF, WhatsApp e e-mail para o contato salvo) · Usuários (admin libera e-mails de
 administradores e da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
