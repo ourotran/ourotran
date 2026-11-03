@@ -22,7 +22,7 @@ Autoria dos commits: Hugo Marotta.
 ## Abas
 
 Dashboard · Táxis / Jipes e Jardineiras / Transporte Escolar (a mesma tela `page-permissionarios`, filtrada por
-`catAtual`; `CATS` e `CAT_DA_PAG` ligam aba e categoria) · Fiscalização (checklist OK/NOK) · WhatsApp (fila de envio,
+`catAtual`; `CATS` e `CAT_DA_PAG` ligam aba e categoria) · Fiscalização (checklist OK/NOK próprio de cada tipo, em `CK_ITENS`) · WhatsApp (fila de envio,
 uma conversa por clique, porque o navegador bloqueia várias janelas) · Guarda Municipal (consulta de placa em todos os
 tipos, filtro por tipo, impressão/PDF, WhatsApp e e-mail para o contato salvo) · Usuários (admin libera e-mails de
 administradores e da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.

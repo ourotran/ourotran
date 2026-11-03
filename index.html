@@ -428,7 +428,7 @@ body.modo-guarda .so-admin{display:none!important}
         </div>
       </div>
       <div class="card" style="margin-bottom:14px">
-        <div class="sec-title">Checklist de Conformidade <span style="margin-left:auto">Toque: OK → NOK → limpar</span></div>
+        <div class="sec-title">Checklist de Conformidade — <span id="ck-tipo">Táxi</span> <span style="margin-left:auto">Toque: OK → NOK → limpar</span></div>
         <div class="ck-grid" id="checklist"></div>
       </div>
       <div class="card">
@@ -620,7 +620,14 @@ var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_rjpexCs21e0AsU051Folhw_d7yX_Lut';
 var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-var CK_ITEMS = ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'];
+// checklist da fiscalização muda conforme o tipo do veículo escolhido
+var CK_ITENS = {
+  TAXI: ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'],
+  TURISMO: ['CNH do condutor (categoria compatível)', 'CRLV em dia', 'Autorização municipal de turismo', 'Selo de vistoria 2026', 'Seguro de passageiros (APP)', 'Cintos e itens de segurança dos passageiros', 'Lotação dentro do permitido', 'Pneus, freios e iluminação', 'Extintor de incêndio', 'Identificação visual do veículo'],
+  ESCOLAR: ['CNH categoria D + curso de transporte escolar', 'Autorização municipal de transporte escolar', 'Autorização do DETRAN (vistoria semestral)', 'CRLV em dia', 'Seguro de passageiros (APP)', 'Faixa "ESCOLAR" pintada na carroceria', 'Cronotacógrafo funcionando', 'Cinto de segurança em todos os bancos', 'Monitor(a) acompanhando os alunos', 'Lotação dentro do permitido', 'Extintor de incêndio', 'Selo de vistoria 2026']
+};
+var ckCat = 'TAXI';
+function ckItens() { return CK_ITENS[ckCat]; }
 var MSG_PADRAO = 'Olá *{NOME}*! 👋\n\nA *OuroTran* — Superintendência de Transporte de Ouro Preto informa que seu veículo de placa *{PLACA}* (Ponto: {PONTO}) está com *documentação irregular*.\n\n⚠️ *Situação:* {OBS}\n\nPor favor, regularize sua situação o mais breve possível para evitar *suspensão da permissão*.\n\nDúvidas: Entre em contato com a OuroTran.\n📍 Prefeitura de Ouro Preto — Setor de Transporte';
 // cada tipo de veículo tem sua aba de cadastro; todas usam a mesma tela (page-permissionarios)
 var CATS = {
@@ -991,10 +998,16 @@ function renderFisc() {
   if (!$('fd-fiscal').value) $('fd-fiscal').value = lsGet('fiscal') || '';
 }
 function setAgora() { $('fd-data').value = hojeISO(); $('fd-hora').value = new Date().toTimeString().slice(0, 5); }
-function onFiscPerm() { var p = getPerm($('fd-perm').value); $('fd-placa').value = p ? (p.placa || '') : ''; }
+function onFiscPerm() {
+  var p = getPerm($('fd-perm').value);
+  $('fd-placa').value = p ? (p.placa || '') : '';
+  var cat = p ? p.categoria : 'TAXI';
+  if (cat !== ckCat) { ckCat = cat; checkStates = {}; renderCK(); }
+}
 
 function renderCK() {
-  $('checklist').innerHTML = CK_ITEMS.map(function(item, i) {
+  $('ck-tipo').textContent = CATS[ckCat].nome;
+  $('checklist').innerHTML = ckItens().map(function(item, i) {
     var st = checkStates[i] || '';
     return '<button type="button" class="ck-item ' + st + '" onclick="toggleCK(' + i + ')" aria-label="' + esc(item) + ': ' + (st || 'não verificado') + '"><div class="ck-box">' + (st === 'ok' ? '✓' : st === 'nok' ? '✕' : '') + '</div><div class="ck-lbl">' + esc(item) + '</div></button>';
   }).join('');
@@ -1004,7 +1017,7 @@ function toggleCK(i) {
   checkStates[i] = !cur ? 'ok' : cur === 'ok' ? 'nok' : '';
   renderCK();
   // algum item NOK sugere resultado irregular
-  var temNok = CK_ITEMS.some(function(_, j) { return checkStates[j] === 'nok'; });
+  var temNok = ckItens().some(function(_, j) { return checkStates[j] === 'nok'; });
   if (temNok && $('fd-res').value === 'Regular') $('fd-res').value = 'Irregular';
 }
 
@@ -1012,7 +1025,7 @@ function salvarFisc() {
   var pObj = getPerm($('fd-perm').value);
   var data = $('fd-data').value;
   if (!pObj || !data) { showToast('Informe o permissionário e a data', true); return; }
-  var nok = CK_ITEMS.filter(function(_, i) { return checkStates[i] === 'nok'; });
+  var nok = ckItens().filter(function(_, i) { return checkStates[i] === 'nok'; });
   var texto = $('fd-pend').value.trim();
   var pend = nok.join(', ');
   if (texto) pend = pend ? pend + ' — ' + texto : texto;
@@ -1024,7 +1037,7 @@ function salvarFisc() {
     placa: $('fd-placa').value.toUpperCase().replace(/[^A-Z0-9]/g, ''),
     local: $('fd-local').value.trim(), fiscal: fiscal,
     resultado: $('fd-res').value, pendencias: pend || 'Nenhuma',
-    checklist: CK_ITEMS.map(function(item, i) { return { item: item, status: checkStates[i] || '' }; })
+    checklist: ckItens().map(function(item, i) { return { item: item, status: checkStates[i] || '' }; })
   };
   acao(async function() {
     var row = await db(sb.from('fiscalizacoes').insert(fiscParaBanco(f)).select().single());
@@ -1033,7 +1046,7 @@ function salvarFisc() {
   });
 }
 function clearFisc() {
-  checkStates = {};
+  checkStates = {}; ckCat = 'TAXI';
   ['fd-perm', 'fd-placa', 'fd-local', 'fd-pend'].forEach(function(id) { $(id).value = ''; });
   $('fd-res').value = 'Regular';
   setAgora(); renderCK();
