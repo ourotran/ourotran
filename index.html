@@ -248,6 +248,11 @@ body.modo-guarda .so-admin{display:none!important}
 .g-resultado.irr{background:var(--rd);color:var(--red);border-color:var(--red)}
 .g-resultado.ok{background:var(--gn);color:var(--green);border-color:var(--green)}
 
+.cat-tag{display:inline-block;font-size:9px;font-weight:600;letter-spacing:1px;padding:2px 6px;border-radius:4px;background:var(--bd);color:var(--blue);text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.cat-tag.TAXI{background:var(--gd);color:var(--gold)}.cat-tag.ESCOLAR{background:var(--ad);color:var(--amb)}
+.g-contato{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px}
+@media (max-width:860px){.g-contato{grid-template-columns:1fr}}
+
 /* USUÁRIOS */
 .usr-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px}
 .usr-email{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis}
@@ -261,7 +266,7 @@ body.modo-guarda .so-admin{display:none!important}
       <div class="logo-icon">OP</div>
       <div>
         <div class="logo-name">OUROTRAN</div>
-        <div class="logo-sub">Fiscalização de Táxi</div>
+        <div class="logo-sub">Fiscalização de Transportes</div>
       </div>
     </div>
     <form id="lg-form" onsubmit="entrar(event)" hidden style="margin-top:22px">
@@ -285,7 +290,7 @@ body.modo-guarda .so-admin{display:none!important}
       <div class="logo-icon">OP</div>
       <div>
         <div class="logo-name">OUROTRAN</div>
-        <div class="logo-sub">Fiscalização de Táxi</div>
+        <div class="logo-sub">Fiscalização de Transportes</div>
       </div>
     </div>
     <div class="status-bar"><div class="dot"></div>SISTEMA ATIVO — OURO PRETO / MG</div>
@@ -297,7 +302,9 @@ body.modo-guarda .so-admin{display:none!important}
     </div>
     <div class="nav-sec so-admin">
       <div class="nav-lbl">Cadastros</div>
-      <button class="nav-item" data-page="permissionarios">👤 Permissionários <span class="badge" id="b-perm"></span></button>
+      <button class="nav-item" data-page="permissionarios">🚕 Táxis <span class="badge" id="b-perm"></span></button>
+      <button class="nav-item" data-page="turismo">🚙 Jipes e Jardineiras <span class="badge" id="b-tur"></span></button>
+      <button class="nav-item" data-page="escolar">🚐 Transporte Escolar <span class="badge" id="b-esc"></span></button>
     </div>
     <div class="nav-sec">
       <div class="nav-lbl">Operações</div>
@@ -349,7 +356,7 @@ body.modo-guarda .so-admin{display:none!important}
     <!-- DASHBOARD -->
     <section class="page active" id="page-dashboard">
       <div class="kpi-grid">
-        <div class="kpi gold"><div class="kpi-lbl">Permissionários</div><div class="kpi-val" id="kpi-tot">0</div><div class="kpi-sub">Táxis cadastrados</div></div>
+        <div class="kpi gold"><div class="kpi-lbl">Permissionários</div><div class="kpi-val" id="kpi-tot">0</div><div class="kpi-sub" id="kpi-tot-sub">Veículos cadastrados</div></div>
         <div class="kpi green"><div class="kpi-lbl">Regulares</div><div class="kpi-val" id="kpi-reg">0</div><div class="kpi-sub">Documentação em dia</div></div>
         <div class="kpi red"><div class="kpi-lbl">Irregulares</div><div class="kpi-val" id="kpi-irr">0</div><div class="kpi-sub">Requer ação imediata</div></div>
         <div class="kpi blue"><div class="kpi-lbl">Fiscalizações</div><div class="kpi-val" id="kpi-fisc">0</div><div class="kpi-sub">Total registrado</div></div>
@@ -386,7 +393,7 @@ body.modo-guarda .so-admin{display:none!important}
     <!-- PERMISSIONARIOS -->
     <section class="page" id="page-permissionarios">
       <div class="form-header">
-        <div><div class="form-title">Permissionários</div><div class="form-sub" id="perm-sub"></div></div>
+        <div><div class="form-title" id="perm-title">Táxis</div><div class="form-sub" id="perm-sub"></div></div>
         <button class="btn btn-gold" onclick="abrirPerm()">+ Novo</button>
       </div>
       <div class="tbl-header">
@@ -438,7 +445,7 @@ body.modo-guarda .so-admin{display:none!important}
     <!-- WHATSAPP -->
     <section class="page" id="page-whatsapp">
       <div class="form-header">
-        <div><div class="form-title">Notificação WhatsApp</div><div class="form-sub">NOTIFICAR TAXISTAS IRREGULARES EM MASSA</div></div>
+        <div><div class="form-title">Notificação WhatsApp</div><div class="form-sub">NOTIFICAR PERMISSIONÁRIOS IRREGULARES EM MASSA</div></div>
         <div class="btn-group">
           <button class="btn btn-outline btn-sm" onclick="selectAll(true)">Selecionar pendentes</button>
           <button class="btn btn-outline btn-sm" onclick="selectAll(false)">Limpar seleção</button>
@@ -457,10 +464,10 @@ body.modo-guarda .so-admin{display:none!important}
         <div style="margin-bottom:10px">
           <textarea class="fi" id="wpp-msg" rows="9" style="font-size:12px;line-height:1.7" oninput="salvarMsg()"></textarea>
         </div>
-        <div class="hint">Variáveis disponíveis: {NOME} {PLACA} {PONTO} {OBS} — são substituídas automaticamente para cada taxista</div>
+        <div class="hint">Variáveis disponíveis: {NOME} {PLACA} {PONTO} {OBS} — são substituídas automaticamente para cada permissionário</div>
       </div>
       <div class="card">
-        <div class="sec-title">📋 Taxistas Irregulares <span>SELECIONE PARA NOTIFICAR</span></div>
+        <div class="sec-title">📋 Irregulares — Táxi, Turismo e Escolar <span>SELECIONE PARA NOTIFICAR</span></div>
         <div class="irr-list" id="irr-list"></div>
       </div>
     </section>
@@ -471,14 +478,23 @@ body.modo-guarda .so-admin{display:none!important}
         <div><div class="form-title">Relatório — Guarda Municipal</div><div class="form-sub">LISTAGEM DE IRREGULARES PARA FISCALIZAÇÃO DE CAMPO</div></div>
         <div class="btn-group">
           <button class="btn btn-blue btn-sm" onclick="imprimirGuarda()">📋 Imprimir / Salvar PDF</button>
-          <button class="btn btn-wpp btn-sm" onclick="enviarGuardaWpp()">📱 Enviar via WhatsApp</button>
+          <button class="btn btn-wpp btn-sm so-admin" onclick="enviarGuardaWpp()">📱 Enviar via WhatsApp</button>
+          <button class="btn btn-outline btn-sm so-admin" onclick="enviarGuardaEmail()">✉️ Enviar por e-mail</button>
         </div>
+      </div>
+      <div class="card so-admin" style="margin-bottom:14px">
+        <div class="sec-title">📇 Contato da Guarda Municipal <span>PARA ONDE VÃO AS NOTIFICAÇÕES</span></div>
+        <form class="g-contato" onsubmit="salvarContatoGuarda(event)">
+          <div class="fg"><label class="fl" for="g-tel">WhatsApp da Guarda</label><input class="fi" id="g-tel" placeholder="(31) 99999-9999" inputmode="tel"></div>
+          <div class="fg"><label class="fl" for="g-email">E-mail da Guarda</label><input class="fi" type="email" id="g-email" placeholder="guarda@ouropreto.mg.gov.br"></div>
+          <button class="btn btn-gold">Salvar contato</button>
+        </form>
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="g-stats">
           <div class="g-stat"><div class="g-stat-val" style="color:var(--red)" id="g-irr">0</div><div class="g-stat-lbl">Irregulares</div></div>
-          <div class="g-stat so-admin"><div class="g-stat-val" style="color:var(--gold)" id="g-tot">0</div><div class="g-stat-lbl">Total</div></div>
-          <div class="g-stat so-admin"><div class="g-stat-val" style="color:var(--green)" id="g-reg">0</div><div class="g-stat-lbl">Regulares</div></div>
+          <div class="g-stat"><div class="g-stat-val" style="color:var(--gold)" id="g-tot">0</div><div class="g-stat-lbl">Total</div></div>
+          <div class="g-stat"><div class="g-stat-val" style="color:var(--green)" id="g-reg">0</div><div class="g-stat-lbl">Regulares</div></div>
           <div class="g-stat"><div class="g-stat-val" style="font-size:14px;font-weight:700;color:var(--tx)" id="g-data">—</div><div class="g-stat-lbl">Data do Relatório</div></div>
         </div>
         <div class="g-warn">
@@ -488,10 +504,16 @@ body.modo-guarda .so-admin{display:none!important}
         <div class="tbl-wrap">
           <div class="g-busca">
             <div class="search-box"><span style="color:var(--tx3)">🔍</span><input type="search" id="g-busca" placeholder="Consultar placa ou nome..." oninput="renderGuarda()" autocomplete="off" aria-label="Consultar placa ou nome"></div>
+            <select class="fsel" id="g-cat" onchange="renderGuarda()" aria-label="Tipo de veículo">
+              <option value="">Todos os tipos</option>
+              <option value="TAXI">🚕 Táxis</option>
+              <option value="TURISMO">🚙 Jipes e Jardineiras</option>
+              <option value="ESCOLAR">🚐 Transporte Escolar</option>
+            </select>
           </div>
           <div id="g-resultado"></div>
           <table>
-            <thead><tr><th>#</th><th>Permissionário</th><th>Placa</th><th>Ponto de Táxi</th><th>Telefone</th><th>Situação</th></tr></thead>
+            <thead><tr><th>#</th><th>Permissionário</th><th>Tipo</th><th>Placa</th><th>Ponto</th><th>Telefone</th><th>Situação</th></tr></thead>
             <tbody id="guarda-table"></tbody>
           </table>
         </div>
@@ -506,7 +528,7 @@ body.modo-guarda .so-admin{display:none!important}
         <form class="form-grid" onsubmit="addUsuario(event)">
           <div class="fg"><label class="fl" for="us-email">E-mail</label><input class="fi" type="email" id="us-email" placeholder="guarda@exemplo.com" required></div>
           <div class="fg"><label class="fl" for="us-papel">Tipo de acesso</label>
-            <select class="fi" id="us-papel"><option value="guarda">🛡️ Guarda Municipal — só consulta irregulares</option><option value="admin">🔑 Administrador — acesso total</option></select>
+            <select class="fi" id="us-papel"><option value="guarda">🛡️ Guarda Municipal — só consulta (regular / irregular)</option><option value="admin">🔑 Administrador — acesso total</option></select>
           </div>
           <div class="fg full"><button class="btn btn-gold" style="justify-self:start">+ Adicionar</button></div>
         </form>
@@ -553,7 +575,10 @@ body.modo-guarda .so-admin{display:none!important}
     <div class="modal-title"><span id="mp-title">Novo Permissionário</span> <button class="close-btn" onclick="closeModal('modal-perm')" aria-label="Fechar">✕</button></div>
     <input type="hidden" id="np-id">
     <div class="form-grid">
-      <div class="fg full"><label class="fl" for="np-nome">Nome Completo *</label><input class="fi upper" id="np-nome" placeholder="Nome do taxista"></div>
+      <div class="fg full"><label class="fl" for="np-nome">Nome Completo *</label><input class="fi upper" id="np-nome" placeholder="Nome do permissionário ou empresa"></div>
+      <div class="fg"><label class="fl" for="np-cat">Tipo</label>
+        <select class="fi" id="np-cat"><option value="TAXI">🚕 Táxi</option><option value="TURISMO">🚙 Jipe / Jardineira</option><option value="ESCOLAR">🚐 Transporte Escolar</option></select>
+      </div>
       <div class="fg"><label class="fl" for="np-cpf">CPF</label><input class="fi" id="np-cpf" placeholder="000.000.000-00" inputmode="numeric"></div>
       <div class="fg"><label class="fl" for="np-cnh">CNH</label><input class="fi" id="np-cnh" inputmode="numeric"></div>
       <div class="fg"><label class="fl" for="np-perm">Nº da Permissão</label><input class="fi upper" id="np-perm" placeholder="Automático se vazio"></div>
@@ -564,7 +589,7 @@ body.modo-guarda .so-admin{display:none!important}
       <div class="fg"><label class="fl" for="np-seg">Vencimento Seguro</label><input class="fi" type="date" id="np-seg"></div>
       <div class="fg"><label class="fl" for="np-vis">Última Vistoria</label><input class="fi" type="date" id="np-vis"></div>
       <div class="fg"><label class="fl" for="np-tel">Telefone (WhatsApp)</label><input class="fi" id="np-tel" placeholder="(31) 99999-9999" inputmode="tel"></div>
-      <div class="fg"><label class="fl" for="np-ponto">Ponto de Táxi</label><input class="fi upper" id="np-ponto" placeholder="Ex: Praça Tiradentes" list="pontos-list"><datalist id="pontos-list"></datalist></div>
+      <div class="fg"><label class="fl" for="np-ponto">Ponto / Empresa</label><input class="fi upper" id="np-ponto" placeholder="Ex: Praça Tiradentes" list="pontos-list"><datalist id="pontos-list"></datalist></div>
       <div class="fg"><label class="fl" for="np-sit">Situação</label>
         <select class="fi" id="np-sit"><option value="REGULAR">✅ Regular</option><option value="IRREGULAR">❌ Irregular</option></select>
       </div>
@@ -597,10 +622,19 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var CK_ITEMS = ['Documento do condutor (CNH)', 'CRLV em dia', 'Seguro obrigatório', 'Identificação visual (táxi)', 'Taxímetro lacrado e calibrado', 'Higiene do veículo', 'Extintor de incêndio', 'Colete / crachá', 'Câmera de segurança'];
 var MSG_PADRAO = 'Olá *{NOME}*! 👋\n\nA *OuroTran* — Superintendência de Transporte de Ouro Preto informa que seu veículo de placa *{PLACA}* (Ponto: {PONTO}) está com *documentação irregular*.\n\n⚠️ *Situação:* {OBS}\n\nPor favor, regularize sua situação o mais breve possível para evitar *suspensão da permissão*.\n\nDúvidas: Entre em contato com a OuroTran.\n📍 Prefeitura de Ouro Preto — Setor de Transporte';
-var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Permissionários', 'CADASTRO DE TAXISTAS'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
+// cada tipo de veículo tem sua aba de cadastro; todas usam a mesma tela (page-permissionarios)
+var CATS = {
+  TAXI: { nome: 'Táxis', curto: 'Táxi', pag: 'permissionarios', pre: 'TAX' },
+  TURISMO: { nome: 'Jipes e Jardineiras', curto: 'Turismo', pag: 'turismo', pre: 'TUR' },
+  ESCOLAR: { nome: 'Transporte Escolar', curto: 'Escolar', pag: 'escolar', pre: 'ESC' }
+};
+var CAT_DA_PAG = { permissionarios: 'TAXI', turismo: 'TURISMO', escolar: 'ESCOLAR' };
+var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
 
 var permissionarios = [];
 var fiscalizacoes = [];
+var config = {};
+var catAtual = 'TAXI';
 var checkStates = {};
 var selecionados = {};
 var fila = [];
@@ -616,6 +650,8 @@ function pad(n) { return String(n).padStart(2, '0'); }
 function hojeISO() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function fmtD(s) { if (!s) return '—'; var p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
 function isIrr(p) { return p.situacao === 'IRREGULAR'; }
+function catTag(p) { return '<span class="cat-tag ' + p.categoria + '">' + esc(CATS[p.categoria].curto) + '</span>'; }
+function daCat(cat) { return permissionarios.filter(function(p) { return p.categoria === cat; }); }
 function getIrr() { return permissionarios.filter(isIrr); }
 function getPerm(id) { return permissionarios.filter(function(x) { return x.id == id; })[0]; }
 function cleanTel(t) { return t ? String(t).replace(/\D/g, '') : ''; }
@@ -672,10 +708,10 @@ async function selectTudo(tabela) {
 }
 
 function permDoBanco(r) {
-  return { id: r.id, nome: r.nome, cpf: r.cpf, cnh: r.cnh, numPerm: r.num_perm, vencPerm: r.venc_perm || '', placa: r.placa, modelo: r.modelo, crlv: r.crlv || '', seguro: r.seguro || '', vistoria: r.vistoria || '', tel: r.tel, ponto: r.ponto, situacao: r.situacao, obs: r.obs, wpp: r.wpp_notificado || '' };
+  return { id: r.id, categoria: r.categoria || 'TAXI', nome: r.nome, cpf: r.cpf, cnh: r.cnh, numPerm: r.num_perm, vencPerm: r.venc_perm || '', placa: r.placa, modelo: r.modelo, crlv: r.crlv || '', seguro: r.seguro || '', vistoria: r.vistoria || '', tel: r.tel, ponto: r.ponto, situacao: r.situacao, obs: r.obs, wpp: r.wpp_notificado || '' };
 }
 function permParaBanco(p) {
-  return { nome: p.nome, cpf: p.cpf || '', cnh: p.cnh || '', num_perm: p.numPerm || '', venc_perm: p.vencPerm || null, placa: p.placa || '', modelo: p.modelo || '', crlv: p.crlv || null, seguro: p.seguro || null, vistoria: p.vistoria || null, tel: p.tel || '', ponto: p.ponto || '', situacao: p.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: p.obs || '' };
+  return { categoria: CATS[p.categoria] ? p.categoria : 'TAXI', nome: p.nome, cpf: p.cpf || '', cnh: p.cnh || '', num_perm: p.numPerm || '', venc_perm: p.vencPerm || null, placa: p.placa || '', modelo: p.modelo || '', crlv: p.crlv || null, seguro: p.seguro || null, vistoria: p.vistoria || null, tel: p.tel || '', ponto: p.ponto || '', situacao: p.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: p.obs || '' };
 }
 function fiscDoBanco(r) {
   return { id: r.id, data: r.data, hora: r.hora, permId: r.perm_id, permissionario: r.permissionario, permissao: r.permissao, placa: r.placa, local: r.local, fiscal: r.fiscal, resultado: r.resultado, pendencias: r.pendencias, checklist: r.checklist };
@@ -688,11 +724,15 @@ async function carregarDados() {
   var r = await Promise.all([
     selectTudo('permissionarios'),
     selectTudo('fiscalizacoes'),
-    db(sb.from('configuracoes').select('valor').eq('chave', 'wpp_msg').maybeSingle())
+    db(sb.from('configuracoes').select('chave, valor'))
   ]);
   permissionarios = r[0].map(permDoBanco);
   fiscalizacoes = r[1].map(fiscDoBanco);
-  $('wpp-msg').value = (r[2] && r[2].valor) || MSG_PADRAO;
+  config = {};
+  r[2].forEach(function(c) { config[c.chave] = c.valor; });
+  $('wpp-msg').value = config.wpp_msg || MSG_PADRAO;
+  $('g-tel').value = config.guarda_tel || '';
+  $('g-email').value = config.guarda_email || '';
 }
 
 // ---------- login ----------
@@ -792,15 +832,17 @@ async function sair() {
 }
 
 // ---------- navegação ----------
-var RENDER = { dashboard: updateDash, permissionarios: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios };
+var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios };
 var paginaAtual = 'dashboard';
 var papel = 'admin';
 
 function irPara(pg) {
   if (papel === 'guarda') pg = 'guarda';
   paginaAtual = pg;
+  if (CAT_DA_PAG[pg]) catAtual = CAT_DA_PAG[pg];
+  var secao = CAT_DA_PAG[pg] ? 'permissionarios' : pg;
   document.querySelectorAll('.nav-item[data-page]').forEach(function(n) { n.classList.toggle('active', n.dataset.page === pg); });
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.toggle('active', p.id === 'page-' + pg); });
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.toggle('active', p.id === 'page-' + secao); });
   var t = TITLES[pg] || [pg, ''];
   $('ttl').textContent = t[0];
   $('sub').textContent = t[1];
@@ -816,7 +858,9 @@ function refresh() { updateBadges(); RENDER[paginaAtual](); }
 
 function updateBadges() {
   var irr = getIrr().length;
-  $('b-perm').textContent = permissionarios.length;
+  $('b-perm').textContent = daCat('TAXI').length;
+  $('b-tur').textContent = daCat('TURISMO').length;
+  $('b-esc').textContent = daCat('ESCOLAR').length;
   $('b-wpp').textContent = irr;
   $('b-guard').textContent = irr;
   $('b-notif').textContent = irr;
@@ -830,9 +874,10 @@ function updateDash() {
   $('kpi-reg').textContent = permissionarios.length - irrList.length;
   $('kpi-irr').textContent = irrList.length;
   $('kpi-fisc').textContent = fiscalizacoes.length;
+  $('kpi-tot-sub').textContent = Object.keys(CATS).map(function(c) { return daCat(c).length + ' ' + CATS[c].curto.toLowerCase(); }).join(' · ');
 
   var out = irrList.slice(0, 6).map(function(p) {
-    return '<div class="alert-item red"><div><div class="alert-name">' + esc(p.nome) + '</div><div class="alert-detail">' + esc(p.ponto || '—') + ' · ' + esc(p.placa || 'sem placa') + '</div></div><span class="alert-tag tag-red">IRREGULAR</span></div>';
+    return '<div class="alert-item red"><div><div class="alert-name">' + esc(p.nome) + ' ' + catTag(p) + '</div><div class="alert-detail">' + esc(p.ponto || '—') + ' · ' + esc(p.placa || 'sem placa') + '</div></div><span class="alert-tag tag-red">IRREGULAR</span></div>';
   }).join('');
   if (irrList.length > 6) out += '<div class="more">+' + (irrList.length - 6) + ' irregulares — <a href="#" onclick="irPara(\'guarda\');return false" style="color:var(--gold)">ver todos</a></div>';
   $('dash-irr').innerHTML = out || vazio('Nenhum irregular');
@@ -848,9 +893,11 @@ function updateDash() {
 function renderPerm() {
   var filter = $('perm-filter').value;
   var q = $('perm-search').value.trim().toUpperCase();
-  var irrCnt = getIrr().length;
-  $('perm-sub').textContent = permissionarios.length + ' TAXISTAS CADASTRADOS — ' + irrCnt + ' IRREGULARES';
-  var list = permissionarios.filter(function(p) {
+  var daAba = daCat(catAtual);
+  var irrCnt = daAba.filter(isIrr).length;
+  $('perm-title').textContent = CATS[catAtual].nome;
+  $('perm-sub').textContent = daAba.length + ' CADASTRADOS — ' + irrCnt + ' IRREGULARES';
+  var list = daAba.filter(function(p) {
     if (filter && p.situacao !== filter) return false;
     if (!q) return true;
     return [p.nome, p.placa, p.ponto, p.numPerm, p.tel].join(' ').toUpperCase().indexOf(q) !== -1;
@@ -863,7 +910,7 @@ function renderPerm() {
     return '<div class="perm-card' + (irr ? ' irregular-card' : '') + '" tabindex="0" role="button" onclick="abrirPerm(' + p.id + ')" onkeydown="if(event.key===\'Enter\')abrirPerm(' + p.id + ')">' +
       '<div class="perm-head"><div class="perm-avatar' + (irr ? ' irr' : '') + '">' + esc(ini) + '</div>' +
       '<div style="min-width:0"><div class="perm-name">' + esc(p.nome) + '</div><div class="perm-num">' + esc(p.numPerm) + '</div></div></div>' +
-      '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong></div>' +
+      '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong>' + (p.modelo ? ' · ' + esc(p.modelo) : '') + '</div>' +
       '<div class="perm-det">📍 ' + esc(p.ponto || '—') + '</div>' +
       '<div class="perm-det">📱 ' + tel + '</div>' +
       (p.obs ? '<div class="perm-obs">' + esc(p.obs) + '</div>' : '') +
@@ -873,24 +920,25 @@ function renderPerm() {
   }).join('');
 }
 
-var PERM_CAMPOS = { nome: 'np-nome', cpf: 'np-cpf', cnh: 'np-cnh', numPerm: 'np-perm', vencPerm: 'np-vp', placa: 'np-placa', modelo: 'np-modelo', crlv: 'np-crlv', seguro: 'np-seg', vistoria: 'np-vis', tel: 'np-tel', ponto: 'np-ponto', situacao: 'np-sit', obs: 'np-obs' };
+var PERM_CAMPOS = { categoria: 'np-cat', nome: 'np-nome', cpf: 'np-cpf', cnh: 'np-cnh', numPerm: 'np-perm', vencPerm: 'np-vp', placa: 'np-placa', modelo: 'np-modelo', crlv: 'np-crlv', seguro: 'np-seg', vistoria: 'np-vis', tel: 'np-tel', ponto: 'np-ponto', situacao: 'np-sit', obs: 'np-obs' };
 
 function abrirPerm(id) {
   var p = id ? getPerm(id) : null;
   $('np-id').value = p ? p.id : '';
   $('mp-title').textContent = p ? 'Editar Permissionário' : 'Novo Permissionário';
   $('np-del').style.display = p ? '' : 'none';
-  Object.keys(PERM_CAMPOS).forEach(function(k) { $(PERM_CAMPOS[k]).value = p ? (p[k] || '') : (k === 'situacao' ? 'REGULAR' : ''); });
+  var padrao = { situacao: 'REGULAR', categoria: catAtual };
+  Object.keys(PERM_CAMPOS).forEach(function(k) { $(PERM_CAMPOS[k]).value = p ? (p[k] || '') : (padrao[k] || ''); });
   var pontos = {};
   permissionarios.forEach(function(x) { if (x.ponto) pontos[x.ponto] = 1; });
   $('pontos-list').innerHTML = Object.keys(pontos).sort().map(function(x) { return '<option value="' + esc(x) + '">'; }).join('');
   showModal('modal-perm');
 }
 
-function proximoNumPerm() {
+function proximoNumPerm(cat) {
   var max = 0;
-  permissionarios.forEach(function(p) { var n = parseInt(String(p.numPerm).replace(/\D/g, ''), 10); if (n > max) max = n; });
-  return 'TAX-' + String(max + 1).padStart(3, '0');
+  daCat(cat).forEach(function(p) { var n = parseInt(String(p.numPerm).replace(/\D/g, ''), 10); if (n > max) max = n; });
+  return CATS[cat].pre + '-' + String(max + 1).padStart(3, '0');
 }
 
 function salvarPerm() {
@@ -905,7 +953,7 @@ function salvarPerm() {
     var dono = permissionarios.filter(function(p) { return p.placa === dados.placa && p.id != id; })[0];
     if (dono && !confirm('A placa ' + dados.placa + ' já está cadastrada para ' + dono.nome + '. Salvar mesmo assim?')) return;
   }
-  if (!dados.numPerm) dados.numPerm = proximoNumPerm();
+  if (!dados.numPerm) dados.numPerm = proximoNumPerm(dados.categoria);
   acao(async function() {
     if (id) {
       var row = await db(sb.from('permissionarios').update(permParaBanco(dados)).eq('id', id).select().single());
@@ -936,7 +984,7 @@ function renderFisc() {
   var sel = $('fd-perm'), atual = sel.value;
   var ordenados = permissionarios.slice().sort(function(a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
   sel.innerHTML = '<option value="">Selecione...</option>' + ordenados.map(function(p) {
-    return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + esc(p.placa || 'sem placa') + (isIrr(p) ? ' [IRREGULAR]' : '') + '</option>';
+    return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + esc(p.placa || 'sem placa') + ' (' + esc(CATS[p.categoria].curto) + ')' + (isIrr(p) ? ' [IRREGULAR]' : '') + '</option>';
   }).join('');
   sel.value = atual;
   if (!$('fd-data').value) setAgora();
@@ -1033,7 +1081,7 @@ function renderWpp() {
     if (!telOk) delete selecionados[p.id];
     return '<div class="irr-item' + (enviadoHoje(p) ? ' sent' : '') + '">' +
       '<button type="button" class="irr-check' + (selecionados[p.id] ? ' checked' : '') + '" onclick="toggleSel(' + p.id + ', this)"' + (telOk ? '' : ' disabled') + ' aria-label="Selecionar ' + esc(p.nome) + '">✓</button>' +
-      '<div class="irr-info"><div class="irr-name">' + esc(p.nome) + '</div>' +
+      '<div class="irr-info"><div class="irr-name">' + esc(p.nome) + ' ' + catTag(p) + '</div>' +
       '<div class="irr-sub">' + esc(p.placa || 'sem placa') + ' · ' + esc(p.tel || 'sem telefone') + '</div>' +
       '<div class="irr-obs">' + esc(p.obs || '') + '</div>' +
       (p.wpp ? '<div class="irr-sent">✓ Notificado em ' + fmtD(p.wpp) + '</div>' : '') +
@@ -1076,34 +1124,42 @@ function pularFila() { fila.shift(); mostrarFila(); }
 function fecharFila() { fila = []; $('queue-bar').classList.remove('show'); }
 
 // ---------- Guarda Municipal ----------
+function irrDaGuarda() {
+  var cat = $('g-cat').value;
+  return getIrr().filter(function(p) { return !cat || p.categoria === cat; });
+}
 function renderGuarda() {
-  var irrList = getIrr();
+  var cat = $('g-cat').value;
+  var todos = cat ? daCat(cat) : permissionarios;
+  var irrList = todos.filter(isIrr);
   var q = $('g-busca').value.trim().toUpperCase();
   var qPlaca = q.replace(/[^A-Z0-9]/g, '');
   var lista = q ? irrList.filter(function(p) { return (qPlaca && p.placa.indexOf(qPlaca) !== -1) || p.nome.indexOf(q) !== -1; }) : irrList;
-  // placa completa digitada: resposta direta para o guarda na rua
+  // placa completa digitada: resposta direta para o guarda na rua (procura em todos os tipos)
   var res = '';
   if (/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(qPlaca)) {
-    res = lista.some(function(p) { return p.placa === qPlaca; })
-      ? '<div class="g-resultado irr">⛔ Placa ' + esc(qPlaca) + ': IRREGULAR — veículo não pode circular</div>'
-      : '<div class="g-resultado ok">✅ Placa ' + esc(qPlaca) + ' não consta na lista de irregulares</div>';
+    var achados = permissionarios.filter(function(p) { return p.placa === qPlaca; });
+    var irr = achados.filter(isIrr)[0];
+    if (irr) res = '<div class="g-resultado irr">⛔ Placa ' + esc(qPlaca) + ' (' + esc(CATS[irr.categoria].curto) + '): IRREGULAR — veículo não pode circular' + (irr.obs ? '<br><small>' + esc(irr.obs) + '</small>' : '') + '</div>';
+    else if (achados.length) res = '<div class="g-resultado ok">✅ Placa ' + esc(qPlaca) + ' (' + esc(CATS[achados[0].categoria].curto) + '): REGULAR — ' + esc(achados[0].nome) + '</div>';
+    else res = '<div class="g-resultado irr">⚠️ Placa ' + esc(qPlaca) + ' não está cadastrada na OuroTran (táxi, turismo ou escolar)</div>';
   }
   $('g-resultado').innerHTML = res;
   $('g-irr').textContent = irrList.length;
-  $('g-tot').textContent = permissionarios.length;
-  $('g-reg').textContent = permissionarios.length - irrList.length;
+  $('g-tot').textContent = todos.length;
+  $('g-reg').textContent = todos.length - irrList.length;
   $('g-data').textContent = fmtD(hojeISO());
   $('guarda-table').innerHTML = lista.map(function(p, i) {
-    return '<tr><td style="color:var(--tx3);font-weight:600">' + pad(i + 1) + '</td><td><strong>' + esc(p.nome) + '</strong>' + (p.obs ? '<div style="font-size:11px;color:var(--tx3);font-style:italic">' + esc(p.obs) + '</div>' : '') + '</td><td><span class="placa">' + esc(p.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + esc(p.ponto || '—') + '</td><td style="font-size:12px;white-space:nowrap">' + esc(p.tel || '—') + '</td><td><span class="pill irregular">IRREGULAR</span></td></tr>';
-  }).join('') || '<tr><td colspan="6"><div class="empty">' + (q ? 'Nenhum irregular encontrado' : 'Nenhum irregular') + '</div></td></tr>';
+    return '<tr><td style="color:var(--tx3);font-weight:600">' + pad(i + 1) + '</td><td><strong>' + esc(p.nome) + '</strong>' + (p.obs ? '<div style="font-size:11px;color:var(--tx3);font-style:italic">' + esc(p.obs) + '</div>' : '') + '</td><td>' + catTag(p) + '</td><td><span class="placa">' + esc(p.placa || '—') + '</span></td><td style="font-size:12px;color:var(--tx2)">' + esc(p.ponto || '—') + '</td><td style="font-size:12px;white-space:nowrap">' + esc(p.tel || '—') + '</td><td><span class="pill irregular">IRREGULAR</span></td></tr>';
+  }).join('') || '<tr><td colspan="7"><div class="empty">' + (q ? 'Nenhum irregular encontrado' : 'Nenhum irregular') + '</div></td></tr>';
 }
 
 // Abre uma versão para impressão; no diálogo do navegador dá para escolher "Salvar como PDF"
 function imprimirGuarda() {
-  var irrList = getIrr();
+  var irrList = irrDaGuarda();
   var hoje = new Date().toLocaleDateString('pt-BR');
   var linhas = irrList.map(function(p, i) {
-    return '<tr><td>' + pad(i + 1) + '</td><td><b>' + esc(p.nome) + '</b></td><td class="pl">' + esc(p.placa || '—') + '</td><td>' + esc(p.ponto || '—') + '</td><td>' + esc(p.tel || '—') + '</td><td>' + esc(p.obs || '') + '</td></tr>';
+    return '<tr><td>' + pad(i + 1) + '</td><td><b>' + esc(p.nome) + '</b></td><td>' + esc(CATS[p.categoria].curto) + '</td><td class="pl">' + esc(p.placa || '—') + '</td><td>' + esc(p.ponto || '—') + '</td><td>' + esc(p.tel || '—') + '</td><td>' + esc(p.obs || '') + '</td></tr>';
   }).join('');
   var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>OuroTran — Relatório Guarda Municipal ' + hoje + '</title><style>' +
     'body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:24px}h1{font-size:16px;margin:0}h2{font-size:12px;font-weight:normal;color:#555;margin:2px 0 12px}' +
@@ -1111,7 +1167,7 @@ function imprimirGuarda() {
     'th{background:#eee;font-size:10px;text-transform:uppercase}.pl{font-family:monospace;letter-spacing:1px;white-space:nowrap}tr{page-break-inside:avoid}.ass{margin-top:40px;display:flex;gap:60px}.ass div{flex:1;border-top:1px solid #000;padding-top:4px;text-align:center}' +
     '</style></head><body><h1>OUROTRAN — RELATÓRIO PARA A GUARDA MUNICIPAL</h1><h2>Prefeitura de Ouro Preto · Data: ' + hoje + ' · Irregulares: ' + irrList.length + (papel === 'admin' ? ' de ' + permissionarios.length : '') + '</h2>' +
     '<div class="box">' + esc($('g-instr').textContent) + '</div>' +
-    '<table><thead><tr><th>#</th><th>Permissionário</th><th>Placa</th><th>Ponto</th><th>Telefone</th><th>Situação</th></tr></thead><tbody>' + linhas + '</tbody></table>' +
+    '<table><thead><tr><th>#</th><th>Permissionário</th><th>Tipo</th><th>Placa</th><th>Ponto</th><th>Telefone</th><th>Situação</th></tr></thead><tbody>' + linhas + '</tbody></table>' +
     '<div class="ass"><div>Responsável OuroTran</div><div>Guarda Municipal</div></div></body></html>';
   var w = window.open('', '_blank');
   if (!w) { showToast('Permita pop-ups para imprimir o relatório', true); return; }
@@ -1119,15 +1175,33 @@ function imprimirGuarda() {
   setTimeout(function() { w.print(); }, 300);
 }
 
-function enviarGuardaWpp() {
-  var irrList = getIrr();
-  var hoje = new Date().toLocaleDateString('pt-BR');
-  // o link do WhatsApp tem limite de tamanho; acima de 50 nomes o restante vai no PDF
-  var lista = irrList.slice(0, 50).map(function(p, i) { return pad(i + 1) + '. ' + p.nome + ' - ' + (p.placa || 'sem placa') + ' - ' + (p.ponto || '—'); }).join('\n');
+// o link do WhatsApp/e-mail tem limite de tamanho; acima de 50 nomes o restante vai no PDF
+function textoGuarda(negrito) {
+  var irrList = irrDaGuarda();
+  var b = negrito ? '*' : '';
+  var lista = irrList.slice(0, 50).map(function(p, i) { return pad(i + 1) + '. ' + p.nome + ' - ' + CATS[p.categoria].curto + ' - ' + (p.placa || 'sem placa'); }).join('\n');
   if (irrList.length > 50) lista += '\n... e mais ' + (irrList.length - 50) + ' (ver relatório em PDF)';
-  var msg = '*OUROTRAN - Relatório Guarda Municipal*\nData: ' + hoje + '\nIrregulares: ' + irrList.length + '\n\n' + lista;
-  window.open(waLink('', msg), '_blank', 'noopener');
-  showToast('Escolha o contato da Guarda no WhatsApp');
+  return b + 'OUROTRAN - Relatório Guarda Municipal' + b + '\nData: ' + new Date().toLocaleDateString('pt-BR') + '\nIrregulares: ' + irrList.length + '\n\n' + lista;
+}
+function enviarGuardaWpp() {
+  var tel = config.guarda_tel || '';
+  window.open(waLink(tel, textoGuarda(true)), '_blank', 'noopener');
+  showToast(tel ? 'WhatsApp aberto para a Guarda' : 'Escolha o contato da Guarda no WhatsApp (ou salve o número acima)');
+}
+function enviarGuardaEmail() {
+  var email = config.guarda_email || '';
+  if (!email) { showToast('Salve primeiro o e-mail da Guarda', true); $('g-email').focus(); return; }
+  location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('OuroTran — Veículos irregulares ' + new Date().toLocaleDateString('pt-BR')) + '&body=' + encodeURIComponent(textoGuarda(false));
+}
+function salvarContatoGuarda(ev) {
+  ev.preventDefault();
+  var tel = $('g-tel').value.trim(), email = $('g-email').value.trim().toLowerCase();
+  if (tel && !telValido(tel)) { showToast('Telefone incompleto — confira o DDD e o 9', true); $('g-tel').focus(); return; }
+  acao(async function() {
+    await db(sb.from('configuracoes').upsert([{ chave: 'guarda_tel', valor: tel }, { chave: 'guarda_email', valor: email }]));
+    config.guarda_tel = tel; config.guarda_email = email;
+    showToast('Contato da Guarda salvo!');
+  });
 }
 
 // ---------- usuários ----------

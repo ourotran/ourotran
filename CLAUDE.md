@@ -1,6 +1,6 @@
-# OuroTran — Sistema de Fiscalização de Táxi
+# OuroTran — Sistema de Fiscalização de Transportes (táxi, turismo e escolar)
 
-Sistema da OuroTran (Prefeitura de Ouro Preto/MG) para fiscalizar os táxis permissionários.
+Sistema da OuroTran (Prefeitura de Ouro Preto/MG) para fiscalizar táxis, jipes/jardineiras e vans escolares.
 Publicado pelo GitHub Pages: cada `git push` na `main` atualiza o site em 1–2 minutos.
 Autoria dos commits: Hugo Marotta.
 
@@ -8,9 +8,10 @@ Autoria dos commits: Hugo Marotta.
 
 - `index.html`: todo o front-end (HTML + CSS + JavaScript puro, sem build). Usa `@supabase/supabase-js` pelo CDN.
 - Banco: Supabase, projeto `ourotran` (id `hyjhxplpylbaerpkdrnl`, região São Paulo).
-  - `permissionarios`, `fiscalizacoes`, `configuracoes` (`wpp_msg` = mensagem do WhatsApp).
+  - `permissionarios` (coluna `categoria`: `TAXI`, `TURISMO` = jipes/jardineiras, `ESCOLAR` = vans), `fiscalizacoes`,
+    `configuracoes` (`wpp_msg` = mensagem do WhatsApp; `guarda_tel` e `guarda_email` = contato da Guarda).
   - `usuarios_autorizados`: e-mail + `papel` (`admin` ou `guarda`). Criar conta no login não dá acesso sem estar nessa tabela.
-  - RLS por papel (`privado.papel()`): admin lê/grava tudo; guarda só lê permissionários IRREGULARES.
+  - RLS por papel (`privado.papel()`): admin lê/grava tudo; guarda só lê permissionários (regulares e irregulares), sem gravar.
   - Modo guarda no front: `body.modo-guarda` esconde tudo com `.so-admin`; `irPara` força a página `guarda`.
   - Trigger `privado.ajustar_sequencia` avança o contador de ids após importar backup com ids explícitos.
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
@@ -20,9 +21,11 @@ Autoria dos commits: Hugo Marotta.
 
 ## Abas
 
-Dashboard · Permissionários (busca, filtro, novo/editar/excluir ao clicar no cartão) · Fiscalização (checklist
-OK/NOK) · WhatsApp (fila de envio, uma conversa por clique, porque o navegador bloqueia várias janelas) ·
-Guarda Municipal (consulta de placa, impressão/PDF e WhatsApp) · Usuários (admin libera e-mails da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
+Dashboard · Táxis / Jipes e Jardineiras / Transporte Escolar (a mesma tela `page-permissionarios`, filtrada por
+`catAtual`; `CATS` e `CAT_DA_PAG` ligam aba e categoria) · Fiscalização (checklist OK/NOK) · WhatsApp (fila de envio,
+uma conversa por clique, porque o navegador bloqueia várias janelas) · Guarda Municipal (consulta de placa em todos os
+tipos, filtro por tipo, impressão/PDF, WhatsApp e e-mail para o contato salvo) · Usuários (admin libera e-mails de
+administradores e da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
 
 ## Convenções
 
