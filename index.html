@@ -170,6 +170,57 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--tx)}
 .perm-status{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px}
 .ps-ok{background:var(--gn);color:var(--green)}.ps-irr{background:var(--rd);color:var(--red)}
 
+/* MODOS DE VISUALIZAÇÃO (como o "Visualizar" do Windows) */
+.vis-wrap{position:relative}
+.vis-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;max-height:70vh;overflow-y:auto;background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:6px;min-width:230px;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.vis-lbl{font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;padding:6px 10px 3px}
+.vis-item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;background:none;border:none;color:var(--tx);font-family:inherit;font-size:13px;border-radius:6px;cursor:pointer;text-align:left}
+.vis-item:hover,.vis-item:focus-visible{background:var(--s2);outline:none}
+.vis-dot{width:10px;color:var(--gold);font-size:10px;text-align:center}
+.vis-ic{width:18px;text-align:center;color:var(--tx2)}
+.vis-sep{height:1px;background:var(--b1);margin:6px 4px}
+.perm-click{cursor:pointer;transition:background .12s,border-color .12s}
+.perm-click:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.st-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}.st-dot.irr{background:var(--red)}
+.perm-grid.v-xl{grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.v-xl .perm-card{padding:20px}
+.v-xl .perm-avatar{width:58px;height:58px;font-size:19px}
+.v-xl .perm-name{font-size:16px}.v-xl .perm-num{font-size:13px}
+.v-xl .perm-det{font-size:13px;margin-bottom:4px}.v-xl .perm-obs{font-size:12px}
+.perm-grid.v-md{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.v-md .perm-card{padding:12px}.v-md .perm-head{margin-bottom:6px}.v-md .perm-avatar{width:32px;height:32px;font-size:11px}
+.v-md .perm-name{font-size:12px}
+.perm-grid.v-sm{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px}
+.pc-sm{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);min-width:0}
+.pc-sm:hover,.pc-bl:hover,.pc-ct:hover{border-color:var(--b2);background:var(--s2)}
+.pc-sm .perm-avatar{width:26px;height:26px;font-size:10px;border-width:1px}
+.pc-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-sm .pc-nm{font-size:12px}
+.perm-grid.v-lista{display:block;columns:3 260px;column-gap:18px}
+.pc-li{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;break-inside:avoid;font-size:12px;min-width:0}
+.pc-li:hover{background:var(--s2)}
+.pc-li .placa{font-size:10px;padding:1px 5px}
+.perm-grid.v-blocos{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.pc-bl{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);min-width:0}
+.pc-bl .perm-avatar{width:46px;height:46px;font-size:15px}
+.pc-bl .pc-txt{flex:1;min-width:0}
+.pc-l1{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-l2{font-size:11px;color:var(--tx2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.perm-grid.v-conteudo{display:flex;flex-direction:column;gap:6px}
+.pc-ct{display:grid;grid-template-columns:38px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 170px;gap:16px;align-items:center;padding:12px 16px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)}
+.pc-ct .pc-obs{font-size:11px;color:var(--tx3);font-style:italic;line-height:1.4}
+.perm-grid.v-detalhes{display:block}
+.perm-grid.v-detalhes .card{padding:0;overflow:hidden}
+.th-sort{background:none;border:none;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0;display:inline-flex;gap:4px;align-items:center}
+.th-sort:hover,.th-sort.on{color:var(--gold)}
+.tr-perm{cursor:pointer}
+.tr-perm td{font-size:12px}
+@media (max-width:860px){
+  .pc-ct{grid-template-columns:38px minmax(0,1fr);gap:6px 12px}
+  .pc-ct > :nth-child(n+3){grid-column:2}
+  .perm-grid.v-xl{grid-template-columns:1fr}
+}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal-overlay.open{display:flex}
@@ -446,11 +497,17 @@ body.modo-guarda .so-admin{display:none!important}
       </div>
       <div class="tbl-header">
         <div class="search-box"><span style="color:var(--tx3)">🔍</span><input type="search" id="perm-search" placeholder="Buscar por nome, placa, ponto ou permissão..." oninput="renderPerm()"></div>
-        <select class="fsel" id="perm-filter" onchange="renderPerm()">
-          <option value="">Todos</option>
-          <option value="REGULAR">✅ Regulares</option>
-          <option value="IRREGULAR">❌ Irregulares</option>
-        </select>
+        <div class="btn-group">
+          <select class="fsel" id="perm-filter" onchange="renderPerm()" aria-label="Filtrar por situação">
+            <option value="">Todos</option>
+            <option value="REGULAR">✅ Regulares</option>
+            <option value="IRREGULAR">❌ Irregulares</option>
+          </select>
+          <div class="vis-wrap">
+            <button type="button" class="btn btn-outline" id="vis-btn" onclick="toggleVisMenu()" aria-haspopup="menu" aria-expanded="false">▦ Visualizar ▾</button>
+            <div class="vis-menu" id="vis-menu" role="menu" hidden></div>
+          </div>
+        </div>
       </div>
       <div class="perm-grid" id="perm-grid"></div>
     </section>
@@ -1161,6 +1218,64 @@ function updateDash() {
 }
 
 // ---------- permissionários ----------
+// modos de exibição da lista (como o menu "Visualizar" do Windows); a escolha fica salva neste navegador
+var VISOES = [
+  ['xl', '🖼️', 'Ícones extra grandes'], ['lg', '🔲', 'Ícones grandes'], ['md', '▫️', 'Ícones médios'], ['sm', '▪️', 'Ícones pequenos'],
+  ['lista', '☰', 'Lista'], ['detalhes', '≣', 'Detalhes'], ['blocos', '▤', 'Blocos'], ['conteudo', '▥', 'Conteúdo']
+];
+var ORDENS = [['num', 'Nº da permissão'], ['nome', 'Nome'], ['placa', 'Placa'], ['ponto', 'Ponto / empresa'], ['situacao', 'Situação (irregulares primeiro)'], ['selado', 'Selagem']];
+var permVisao = lsGet('permVisao') || 'lg';
+var permOrdem = lsGet('permOrdem') || 'num';
+var permDesc = lsGet('permDesc') === '1';
+
+function numDe(p) { return parseInt(String(p.numPerm).replace(/\D/g, ''), 10) || 0; }
+function ordenarPerm(lista) {
+  var chave = {
+    num: function(p) { return numDe(p); },
+    nome: function(p) { return p.nome; },
+    placa: function(p) { return p.placa || '~'; },
+    ponto: function(p) { return p.ponto || '~'; },
+    situacao: function(p) { return isIrr(p) ? 0 : 1; },
+    selado: function(p) { return p.selado ? 0 : 1; }
+  }[permOrdem] || function(p) { return numDe(p); };
+  return lista.sort(function(a, b) {
+    var x = chave(a), y = chave(b);
+    var c = typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'pt-BR');
+    if (!c) c = numDe(a) - numDe(b);
+    return permDesc ? -c : c;
+  });
+}
+
+function toggleVisMenu(abrir) {
+  var m = $('vis-menu');
+  abrir = abrir === undefined ? m.hidden : abrir;
+  m.hidden = !abrir;
+  $('vis-btn').setAttribute('aria-expanded', abrir);
+  if (!abrir) return;
+  m.innerHTML = '<div class="vis-lbl">Visualizar</div>' + VISOES.map(function(v) {
+    return '<button type="button" class="vis-item" role="menuitemradio" aria-checked="' + (v[0] === permVisao) + '" onclick="escolherVisao(\'' + v[0] + '\')">' +
+      '<span class="vis-dot">' + (v[0] === permVisao ? '●' : '') + '</span><span class="vis-ic">' + v[1] + '</span>' + v[2] + '</button>';
+  }).join('') + '<div class="vis-sep"></div><div class="vis-lbl">Classificar por</div>' + ORDENS.map(function(o) {
+    return '<button type="button" class="vis-item" role="menuitemradio" aria-checked="' + (o[0] === permOrdem) + '" onclick="escolherOrdem(\'' + o[0] + '\')">' +
+      '<span class="vis-dot">' + (o[0] === permOrdem ? '●' : '') + '</span>' + o[1] + '</button>';
+  }).join('') + '<div class="vis-sep"></div>' +
+    '<button type="button" class="vis-item" role="menuitemcheckbox" aria-checked="' + permDesc + '" onclick="inverterOrdem()"><span class="vis-dot">' + (permDesc ? '✓' : '') + '</span>Ordem decrescente</button>';
+  var atual = m.querySelector('[aria-checked="true"]');
+  if (atual) atual.focus();
+}
+function escolherVisao(v) { permVisao = v; lsSet('permVisao', v); toggleVisMenu(false); renderPerm(); $('vis-btn').focus(); }
+function escolherOrdem(o) { permOrdem = o; lsSet('permOrdem', o); toggleVisMenu(false); renderPerm(); $('vis-btn').focus(); }
+function inverterOrdem() { permDesc = !permDesc; lsSet('permDesc', permDesc ? '1' : ''); toggleVisMenu(false); renderPerm(); }
+// no modo Detalhes, clicar no título da coluna ordena (e clicar de novo inverte)
+function ordenarColuna(o) {
+  if (permOrdem === o) permDesc = !permDesc; else { permOrdem = o; permDesc = false; }
+  lsSet('permOrdem', permOrdem); lsSet('permDesc', permDesc ? '1' : '');
+  renderPerm();
+}
+document.addEventListener('click', function(e) {
+  if (!$('vis-menu').hidden && !e.target.closest('.vis-wrap')) toggleVisMenu(false);
+});
+
 function renderPerm() {
   var filter = $('perm-filter').value;
   var q = $('perm-search').value.trim().toUpperCase();
@@ -1168,30 +1283,104 @@ function renderPerm() {
   var irrCnt = daAba.filter(isIrr).length;
   $('perm-title').textContent = CATS[catAtual].nome;
   $('perm-sub').textContent = daAba.length + ' CADASTRADOS — ' + irrCnt + ' IRREGULARES';
-  var list = daAba.filter(function(p) {
+  var list = ordenarPerm(daAba.filter(function(p) {
     if (filter && p.situacao !== filter) return false;
     if (!q) return true;
     return [p.nome, p.placa, p.ponto, p.numPerm, p.tel].join(' ').toUpperCase().indexOf(q) !== -1;
-  });
-  if (!list.length) { $('perm-grid').innerHTML = '<div class="muted" style="grid-column:1/-1;padding:40px">Nenhum resultado</div>'; return; }
-  $('perm-grid').innerHTML = list.map(function(p) {
-    var irr = isIrr(p);
-    var ini = p.nome.split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('');
-    var nAux = auxDoPerm(p.id);
-    var tel = p.tel ? (telValido(p.tel) ? esc(p.tel) : esc(p.tel) + ' <span class="perm-det warn">(número incompleto)</span>') : '—';
-    return '<div class="perm-card' + (irr ? ' irregular-card' : '') + '" tabindex="0" role="button" onclick="abrirPerm(' + p.id + ')" onkeydown="if(event.key===\'Enter\')abrirPerm(' + p.id + ')">' +
-      '<div class="perm-head"><div class="perm-avatar' + (irr ? ' irr' : '') + '">' + esc(ini) + '</div>' +
-      '<div style="min-width:0"><div class="perm-name">' + esc(p.nome) + '</div><div class="perm-num">' + esc(p.numPerm) + '</div></div></div>' +
-      '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong>' + (p.modelo ? ' · ' + esc(p.modelo) : '') + '</div>' +
-      '<div class="perm-det">📍 ' + esc(p.ponto || '—') + '</div>' +
-      '<div class="perm-det">📱 ' + tel + '</div>' +
-      '<div class="perm-det">' + (p.selado ? '🔖 Selado em ' + fmtD(p.dataSelagem) : '⬜ Não selado') + '</div>' +
-      (nAux.length ? '<div class="perm-det">👥 ' + nAux.length + ' motorista' + (nAux.length > 1 ? 's' : '') + ' auxiliar' + (nAux.length > 1 ? 'es' : '') + (nAux.some(function(a) { return a.situacao === 'IRREGULAR'; }) ? ' <span class="perm-det warn">(com pendência)</span>' : '') + '</div>' : '') +
-      (p.obs ? '<div class="perm-obs">' + esc(p.obs) + '</div>' : '') +
-      '<div class="perm-foot"><span class="perm-status ' + (irr ? 'ps-irr' : 'ps-ok') + '">' + (irr ? 'IRREGULAR' : 'REGULAR') + '</span>' +
-      (irr && telValido(p.tel) ? '<button class="btn btn-wpp btn-sm" onclick="event.stopPropagation();wppUnico(' + p.id + ')">📱 WPP</button>' : '') +
-      '</div></div>';
-  }).join('');
+  }));
+  var grid = $('perm-grid');
+  grid.className = 'perm-grid v-' + permVisao;
+  if (!list.length) { grid.innerHTML = '<div class="muted" style="grid-column:1/-1;padding:40px">Nenhum resultado</div>'; return; }
+  if (permVisao === 'detalhes') { grid.innerHTML = tabelaPerm(list); return; }
+  grid.innerHTML = list.map(VISTA_ITEM[permVisao] || VISTA_ITEM.lg).join('');
+}
+
+// pedaços comuns a todos os modos
+function iniciais(p) { return p.nome.split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join(''); }
+function abreCad(p, classe) {
+  return 'class="' + classe + ' perm-click" tabindex="0" role="button" onclick="abrirPerm(' + p.id + ')" onkeydown="if(event.key===\'Enter\')abrirPerm(' + p.id + ')"';
+}
+function avatar(p) { return '<div class="perm-avatar' + (isIrr(p) ? ' irr' : '') + '">' + esc(iniciais(p)) + '</div>'; }
+function statusTag(p) { var irr = isIrr(p); return '<span class="perm-status ' + (irr ? 'ps-irr' : 'ps-ok') + '">' + (irr ? 'IRREGULAR' : 'REGULAR') + '</span>'; }
+function botaoWpp(p) { return isIrr(p) && telValido(p.tel) ? '<button class="btn btn-wpp btn-sm" onclick="event.stopPropagation();wppUnico(' + p.id + ')">📱 WPP</button>' : ''; }
+function telHtml(p) { return p.tel ? (telValido(p.tel) ? esc(p.tel) : esc(p.tel) + ' <span class="perm-det warn">(número incompleto)</span>') : '—'; }
+function seladoTxt(p) { return p.selado ? '🔖 Selado em ' + fmtD(p.dataSelagem) : '⬜ Não selado'; }
+function auxTxt(p) {
+  var n = auxDoPerm(p.id);
+  if (!n.length) return '';
+  return '👥 ' + n.length + ' motorista' + (n.length > 1 ? 's' : '') + ' auxiliar' + (n.length > 1 ? 'es' : '') +
+    (n.some(function(a) { return a.situacao === 'IRREGULAR'; }) ? ' <span class="perm-det warn">(com pendência)</span>' : '');
+}
+
+// cartão completo: usado nos ícones extra grandes e grandes
+function cartaoPerm(p) {
+  var aux = auxTxt(p);
+  return '<div ' + abreCad(p, 'perm-card' + (isIrr(p) ? ' irregular-card' : '')) + '>' +
+    '<div class="perm-head">' + avatar(p) + '<div style="min-width:0"><div class="perm-name">' + esc(p.nome) + '</div><div class="perm-num">' + esc(p.numPerm) + '</div></div></div>' +
+    '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong>' + (p.modelo ? ' · ' + esc(p.modelo) : '') + '</div>' +
+    '<div class="perm-det">📍 ' + esc(p.ponto || '—') + '</div>' +
+    '<div class="perm-det">📱 ' + telHtml(p) + '</div>' +
+    '<div class="perm-det">' + seladoTxt(p) + '</div>' +
+    (aux ? '<div class="perm-det">' + aux + '</div>' : '') +
+    (p.obs ? '<div class="perm-obs">' + esc(p.obs) + '</div>' : '') +
+    '<div class="perm-foot">' + statusTag(p) + botaoWpp(p) + '</div></div>';
+}
+var VISTA_ITEM = {
+  xl: cartaoPerm,
+  lg: cartaoPerm,
+  md: function(p) {
+    return '<div ' + abreCad(p, 'perm-card' + (isIrr(p) ? ' irregular-card' : '')) + '>' +
+      '<div class="perm-head">' + avatar(p) + '<div style="min-width:0"><div class="perm-name">' + esc(p.nome) + '</div><div class="perm-num">' + esc(p.numPerm) + '</div></div></div>' +
+      '<div class="perm-det">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong></div>' +
+      '<div class="perm-foot">' + statusTag(p) + '</div></div>';
+  },
+  sm: function(p) {
+    return '<div ' + abreCad(p, 'pc-sm') + ' title="' + esc(p.nome + ' — ' + (p.placa || 'sem placa')) + '">' + avatar(p) +
+      '<span class="pc-nm">' + esc(p.nome) + '</span><span class="st-dot' + (isIrr(p) ? ' irr' : '') + '" title="' + (isIrr(p) ? 'Irregular' : 'Regular') + '"></span></div>';
+  },
+  lista: function(p) {
+    return '<div ' + abreCad(p, 'pc-li') + '><span class="st-dot' + (isIrr(p) ? ' irr' : '') + '"></span><span class="pc-nm">' + esc(p.nome) + '</span>' +
+      '<span class="placa">' + esc(p.placa || '—') + '</span></div>';
+  },
+  blocos: function(p) {
+    return '<div ' + abreCad(p, 'pc-bl') + '>' + avatar(p) + '<div class="pc-txt">' +
+      '<div class="pc-l1">' + esc(p.nome) + '</div>' +
+      '<div class="pc-l2">' + esc(p.numPerm) + ' · 🚗 ' + esc(p.placa || 'sem placa') + '</div>' +
+      '<div class="pc-l2">📍 ' + esc(p.ponto || '—') + '</div></div>' + statusTag(p) + '</div>';
+  },
+  conteudo: function(p) {
+    var aux = auxTxt(p);
+    return '<div ' + abreCad(p, 'pc-ct') + '>' + avatar(p) +
+      '<div style="min-width:0"><div class="pc-l1">' + esc(p.nome) + '</div><div class="pc-l2" style="color:var(--gold);font-weight:600">' + esc(p.numPerm) + '</div></div>' +
+      '<div style="min-width:0"><div class="pc-l2">🚗 <strong>' + esc(p.placa || 'sem placa') + '</strong>' + (p.modelo ? ' · ' + esc(p.modelo) : '') + '</div>' +
+      '<div class="pc-l2">📍 ' + esc(p.ponto || '—') + '</div><div class="pc-l2">📱 ' + telHtml(p) + '</div></div>' +
+      '<div style="min-width:0"><div class="pc-l2">' + seladoTxt(p) + '</div>' + (aux ? '<div class="pc-l2">' + aux + '</div>' : '') +
+      (p.obs ? '<div class="pc-obs">' + esc(p.obs) + '</div>' : '') + '</div>' +
+      '<div class="btn-group">' + statusTag(p) + botaoWpp(p) + '</div></div>';
+  }
+};
+function tabelaPerm(list) {
+  function th(o, rotulo) {
+    var on = permOrdem === o;
+    return '<th><button type="button" class="th-sort' + (on ? ' on' : '') + '" onclick="ordenarColuna(\'' + o + '\')">' + rotulo + (on ? (permDesc ? ' ▼' : ' ▲') : '') + '</button></th>';
+  }
+  return '<div class="card"><div class="tbl-wrap"><table><thead><tr>' +
+    th('num', 'Nº') + th('nome', 'Nome') + th('placa', 'Placa') + '<th>Modelo</th>' + th('ponto', 'Ponto / empresa') + '<th>Telefone</th>' +
+    th('selado', 'Selagem') + '<th>Auxiliares</th>' + th('situacao', 'Situação') + '<th>Observação</th></tr></thead><tbody>' +
+    list.map(function(p) {
+      var n = auxDoPerm(p.id).length;
+      return '<tr class="tr-perm" tabindex="0" onclick="abrirPerm(' + p.id + ')" onkeydown="if(event.key===\'Enter\')abrirPerm(' + p.id + ')">' +
+        '<td style="color:var(--gold);font-weight:600;white-space:nowrap">' + esc(p.numPerm) + '</td>' +
+        '<td><strong>' + esc(p.nome) + '</strong></td>' +
+        '<td><span class="placa">' + esc(p.placa || '—') + '</span></td>' +
+        '<td style="color:var(--tx2)">' + esc(p.modelo || '—') + '</td>' +
+        '<td style="color:var(--tx2)">' + esc(p.ponto || '—') + '</td>' +
+        '<td style="white-space:nowrap">' + telHtml(p) + '</td>' +
+        '<td style="white-space:nowrap">' + (p.selado ? '🔖 ' + fmtD(p.dataSelagem) : '—') + '</td>' +
+        '<td style="text-align:center">' + (n || '—') + '</td>' +
+        '<td>' + statusTag(p) + '</td>' +
+        '<td style="color:var(--tx3);font-style:italic;font-size:11px;min-width:200px">' + esc(p.obs || '') + '</td></tr>';
+    }).join('') + '</tbody></table></div></div>';
 }
 
 var PERM_CAMPOS = { categoria: 'np-cat', nome: 'np-nome', cpf: 'np-cpf', cnh: 'np-cnh', numPerm: 'np-perm', vencPerm: 'np-vp', placa: 'np-placa', modelo: 'np-modelo', crlv: 'np-crlv', seguro: 'np-seg', vistoria: 'np-vis', tel: 'np-tel', ponto: 'np-ponto', situacao: 'np-sit', obs: 'np-obs', selado: 'np-selado', dataSelagem: 'np-dsel' };
@@ -2263,7 +2452,7 @@ function descartarAntigos() { if (confirm('Apagar os dados antigos deste navegad
 
 // ---------- teclado ----------
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeModal('modal-perm'); closeModal('modal-frota'); toggleNav(false); }
+  if (e.key === 'Escape') { if (!$('vis-menu').hidden) { toggleVisMenu(false); $('vis-btn').focus(); return; } closeModal('modal-perm'); closeModal('modal-frota'); toggleNav(false); }
 });
 </script>
 </body>
