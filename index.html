@@ -282,6 +282,26 @@ body.modo-guarda .so-admin{display:none!important}
 /* USUÁRIOS */
 .usr-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px}
 .usr-email{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+
+/* CONTROLE DE KM */
+.frota-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
+.vt-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:14px;display:grid;grid-template-columns:minmax(170px,1fr) 1.6fr;gap:14px;align-items:stretch}
+.vt-card.inativa{opacity:.55}
+.vt-info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.vt-modelo{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.4}
+.vt-km{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0}
+.vt-km>div{background:var(--s2);border-radius:var(--r);padding:8px 10px}
+.vt-km-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--gold)}
+.vt-km-lbl{font-size:9px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.vt-info .btn-group{margin-top:auto}
+.vt-3d{height:240px;border-radius:var(--r);background:radial-gradient(ellipse at 50% 65%,#262626,#121212 70%);position:relative;overflow:hidden;cursor:grab}
+.vt-3d:active{cursor:grabbing}
+.v3d-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--tx3);text-align:center;padding:12px}
+.km-filtros{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.km-filtros .fg{min-width:130px}
+.km-total td{font-weight:700;color:var(--gold);border-top:1px solid var(--b2)}
+@media (max-width:1250px){.frota-grid{grid-template-columns:1fr}}
+@media (max-width:860px){.vt-card{grid-template-columns:1fr}.vt-3d{height:220px}}
 </style>
 </head>
 <body>
@@ -336,6 +356,7 @@ body.modo-guarda .so-admin{display:none!important}
       <div class="nav-lbl">Operações</div>
       <button class="nav-item so-admin" data-page="fiscalizacao">🔍 Fiscalização</button>
       <button class="nav-item so-admin" data-page="interdicoes">🚧 Interdições <span class="badge red" id="b-int"></span></button>
+      <button class="nav-item so-admin" data-page="frota">🚓 Controle de KM</button>
       <button class="nav-item so-admin" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp"></span></button>
       <button class="nav-item" data-page="guarda">🛡️ Guarda Municipal <span class="badge red" id="b-guard"></span></button>
       <button class="nav-item so-admin" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif"></span></button>
@@ -626,6 +647,61 @@ body.modo-guarda .so-admin{display:none!important}
       </div>
     </section>
 
+    <!-- CONTROLE DE KM -->
+    <section class="page" id="page-frota">
+      <div class="form-header">
+        <div><div class="form-title">Controle de KM</div><div class="form-sub">VIATURAS LOCADAS DA OUROTRAN</div></div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="novaViatura()">+ Nova viatura</button>
+          <button class="btn btn-gold" onclick="novoKm()">+ Lançar KM</button>
+        </div>
+      </div>
+      <div class="card" id="km-form" hidden style="margin-bottom:14px">
+        <div class="sec-title" id="km-form-tit">Lançar KM</div>
+        <input type="hidden" id="km-id">
+        <div class="form-grid">
+          <div class="fg"><label class="fl" for="km-veiculo">Viatura *</label><select class="fi" id="km-veiculo" onchange="sugerirKmInicial()"></select></div>
+          <div class="fg"><label class="fl" for="km-data">Data *</label><input class="fi" type="date" id="km-data"></div>
+          <div class="fg"><label class="fl" for="km-ini">KM inicial *</label><input class="fi" type="number" id="km-ini" min="0" step="1" inputmode="numeric"></div>
+          <div class="fg"><label class="fl" for="km-fim">KM final *</label><input class="fi" type="number" id="km-fim" min="0" step="1" inputmode="numeric"></div>
+          <div class="fg"><label class="fl" for="km-resp">Motorista / responsável</label><input class="fi upper" id="km-resp"></div>
+          <div class="fg"><label class="fl" for="km-obs">Observação</label><input class="fi" id="km-obs" placeholder="Ex: abastecimento, viagem, oficina"></div>
+        </div>
+        <div class="hint" style="margin-top:10px">O KM inicial vem preenchido com o último KM final dessa viatura.</div>
+        <div class="btn-group" style="margin-top:12px">
+          <div class="spacer" style="flex:1"></div>
+          <button type="button" class="btn btn-outline" onclick="cancelarKm()">Cancelar</button>
+          <button type="button" class="btn btn-gold" onclick="salvarKm()">✔ Salvar KM</button>
+        </div>
+      </div>
+      <div class="sec-title">🚓 Viaturas <span id="vt-resumo"></span></div>
+      <div class="hint" style="margin:-6px 0 12px">Arraste a viatura para girar · Ctrl + rolagem (ou pinça no celular) para zoom.</div>
+      <div class="frota-grid" id="vt-lista"></div>
+      <div class="card">
+        <div class="sec-title">Registros de KM <span id="km-resumo"></span></div>
+        <div class="tbl-header">
+          <div class="km-filtros">
+            <div class="fg"><label class="fl" for="km-de">De</label><input class="fi" type="date" id="km-de" onchange="renderFrota()"></div>
+            <div class="fg"><label class="fl" for="km-ate">Até</label><input class="fi" type="date" id="km-ate" onchange="renderFrota()"></div>
+            <div class="fg"><label class="fl" for="km-fv">Viatura</label><select class="fi" id="km-fv" onchange="renderFrota()"></select></div>
+            <button class="btn btn-outline btn-sm" onclick="semanaKm(0)">Semana atual</button>
+            <button class="btn btn-outline btn-sm" onclick="semanaKm(-1)">Semana passada</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm" onclick="csvSemana()">↓ Planilha CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="imprimirPlanilhaKm()">🖨️ Imprimir planilha</button>
+            <button class="btn btn-gold btn-sm" onclick="imprimirTermoKm()">📝 Termo de recebimento</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Viatura</th><th>Placa</th><th>KM inicial</th><th>KM final</th><th>Rodado</th><th>Responsável</th><th>Observação</th><th></th></tr></thead>
+            <tbody id="km-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- USUARIOS -->
     <section class="page" id="page-usuarios">
       <div class="form-header"><div><div class="form-title">Usuários</div><div class="form-sub">QUEM PODE ENTRAR NO SISTEMA</div></div></div>
@@ -716,6 +792,32 @@ body.modo-guarda .so-admin{display:none!important}
   </div>
 </div>
 
+<!-- MODAL: Viatura da frota (nova / editar) -->
+<div class="modal-overlay" id="modal-frota" onclick="if (event.target === this) closeModal('modal-frota')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mf-title">
+    <div class="modal-title"><span id="mf-title">Nova viatura</span> <button class="close-btn" onclick="closeModal('modal-frota')" aria-label="Fechar">✕</button></div>
+    <input type="hidden" id="vt-id">
+    <div class="form-grid">
+      <div class="fg full"><label class="fl" for="vt-modelo">Modelo *</label><input class="fi" id="vt-modelo" placeholder="Ex: Volkswagen Polo"></div>
+      <div class="fg"><label class="fl" for="vt-tipo">Modelo em 3D</label>
+        <select class="fi" id="vt-tipo"><option value="POLO">Volkswagen Polo (hatch)</option><option value="S10_CABINE_SIMPLES">Chevrolet S10 cabine simples</option><option value="S10">Chevrolet S10 cabine dupla</option></select>
+      </div>
+      <div class="fg"><label class="fl" for="vt-placa">Placa *</label><input class="fi upper" id="vt-placa" placeholder="ABC1D23" maxlength="8"></div>
+      <div class="fg"><label class="fl" for="vt-prefixo">Prefixo (na porta)</label><input class="fi upper" id="vt-prefixo" placeholder="Automático: VTR + final da placa" maxlength="10"></div>
+      <div class="fg"><label class="fl" for="vt-ativo">Situação</label>
+        <select class="fi" id="vt-ativo"><option value="true">✅ Ativa</option><option value="">⏸️ Desativada (devolvida à locadora)</option></select>
+      </div>
+      <div class="fg full"><label class="fl" for="vt-obs">Observação</label><input class="fi" id="vt-obs" placeholder="Ex: locadora, contrato"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-red" id="vt-del" onclick="excluirViatura()">Excluir</button>
+      <div class="spacer"></div>
+      <button class="btn btn-outline" onclick="closeModal('modal-frota')">Cancelar</button>
+      <button class="btn btn-gold" onclick="salvarViatura()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="queue-bar" id="queue-bar">
   <div class="queue-info"><span id="queue-count"></span><strong id="queue-next"></strong></div>
   <button class="btn btn-outline btn-sm" onclick="pularFila()">Pular</button>
@@ -727,6 +829,7 @@ body.modo-guarda .so-admin{display:none!important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="viaturas3d.js"></script>
 <script>
 // Chave pública do Supabase: pode ficar no código. Quem protege os dados é o login + as regras do banco (RLS).
 var SUPABASE_URL = 'https://hyjhxplpylbaerpkdrnl.supabase.co';
@@ -757,12 +860,14 @@ var CATS = {
   ESCOLAR: { nome: 'Transporte Escolar', curto: 'Escolar', pag: 'escolar', pre: 'ESC' }
 };
 var CAT_DA_PAG = { permissionarios: 'TAXI', turismo: 'TURISMO', escolar: 'ESCOLAR' };
-var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], interdicoes: ['Interdições', 'RUAS FECHADAS NO WAZE'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
+var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], interdicoes: ['Interdições', 'RUAS FECHADAS NO WAZE'], frota: ['Controle de KM', 'VIATURAS LOCADAS'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
 
 var permissionarios = [];
 var fiscalizacoes = [];
 var auxiliares = [];
 var interdicoes = [];
+var frota = [];
+var registrosKm = [];
 var config = {};
 var catAtual = 'TAXI';
 var checkStates = {};
@@ -859,6 +964,19 @@ function auxDoBanco(r) {
 function auxParaBanco(a) {
   return { perm_id: a.permId, nome: a.nome, cpf: a.cpf || '', cnh: a.cnh || '', tel: a.tel || '', endereco: a.endereco || '', situacao: a.situacao === 'IRREGULAR' ? 'IRREGULAR' : 'REGULAR', obs: a.obs || '', ultima_fiscalizacao: a.ultimaFisc || null };
 }
+var TIPOS_3D = { POLO: 'Volkswagen Polo', S10_CABINE_SIMPLES: 'Chevrolet S10 cabine simples', S10: 'Chevrolet S10 cabine dupla' };
+function frotaDoBanco(r) {
+  return { id: r.id, modelo: r.modelo, tipo3d: r.tipo_modelo_3d, placa: r.placa, prefixo: r.prefixo, ativo: r.ativo, obs: r.observacao };
+}
+function frotaParaBanco(v) {
+  return { modelo: v.modelo, tipo_modelo_3d: TIPOS_3D[v.tipo3d] ? v.tipo3d : 'POLO', placa: v.placa, prefixo: v.prefixo || '', ativo: v.ativo !== false, observacao: v.obs || '' };
+}
+function kmDoBanco(r) {
+  return { id: r.id, veiculoId: r.veiculo_id, data: r.data, kmIni: r.km_inicial, kmFim: r.km_final, kmRodado: r.km_rodado, resp: r.responsavel, obs: r.observacao };
+}
+function kmParaBanco(k) {
+  return { veiculo_id: k.veiculoId, data: k.data, km_inicial: k.kmIni, km_final: k.kmFim, responsavel: k.resp || '', observacao: k.obs || '' };
+}
 
 async function carregarDados() {
   var r = await Promise.all([
@@ -866,12 +984,16 @@ async function carregarDados() {
     selectTudo('fiscalizacoes'),
     db(sb.from('configuracoes').select('chave, valor')),
     selectTudo('motoristas_auxiliares'),
-    db(sb.from('interdicoes').select('*').order('inicio', { ascending: false }).limit(500))
+    db(sb.from('interdicoes').select('*').order('inicio', { ascending: false }).limit(500)),
+    selectTudo('veiculos_frota'),
+    selectTudo('registros_km')
   ]);
   permissionarios = r[0].map(permDoBanco);
   fiscalizacoes = r[1].map(fiscDoBanco);
   auxiliares = r[3].map(auxDoBanco);
   interdicoes = r[4];
+  frota = r[5].map(frotaDoBanco);
+  registrosKm = r[6].map(kmDoBanco);
   config = {};
   r[2].forEach(function(c) { config[c.chave] = c.valor; });
   $('wpp-msg').value = config.wpp_msg || MSG_PADRAO;
@@ -884,8 +1006,9 @@ var sessaoAtual = null;
 
 function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
 function mostrarLogin(msg, erro) {
-  permissionarios = []; fiscalizacoes = []; auxiliares = []; interdicoes = []; editInt = null;
-  fecharFila(); closeModal('modal-perm');
+  permissionarios = []; fiscalizacoes = []; auxiliares = []; interdicoes = []; editInt = null; frota = []; registrosKm = [];
+  if (window.Viaturas3D) Viaturas3D.limparTudo();
+  fecharFila(); closeModal('modal-perm'); closeModal('modal-frota');
   $('login').classList.remove('hide');
   $('lg-form').hidden = false;
   loginMsg(msg, erro);
@@ -977,7 +1100,7 @@ async function sair() {
 }
 
 // ---------- navegação ----------
-var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios, interdicoes: renderInterdicoes };
+var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios, interdicoes: renderInterdicoes, frota: renderFrota };
 var paginaAtual = 'dashboard';
 var papel = 'admin';
 
@@ -1515,6 +1638,262 @@ function copiarFeed() {
   else { $('int-feed').select(); document.execCommand('copy'); ok(); }
 }
 
+// ---------- controle de KM da frota ----------
+function getViatura(id) { return frota.filter(function(v) { return v.id == id; })[0]; }
+function isoLocal(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fmtKm(n) { return n == null || n === '' ? '—' : Number(n).toLocaleString('pt-BR') + ' km'; }
+function frotaOrdenada() { return frota.slice().sort(function(a, b) { return (b.ativo - a.ativo) || a.modelo.localeCompare(b.modelo) || a.placa.localeCompare(b.placa); }); }
+// registros do mais novo para o mais antigo
+function kmDaViatura(vid) { return registrosKm.filter(function(k) { return k.veiculoId == vid; }).sort(function(a, b) { return b.data.localeCompare(a.data) || b.id - a.id; }); }
+function ultimoKm(vid) { var r = kmDaViatura(vid)[0]; return r ? r.kmFim : null; }
+
+// semana de segunda a domingo; desloc = -1 é a semana passada
+function semanaKm(desloc) {
+  var d = new Date(), dia = (d.getDay() + 6) % 7;
+  var ini = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dia + 7 * desloc);
+  var fim = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 6);
+  $('km-de').value = isoLocal(ini); $('km-ate').value = isoLocal(fim);
+  renderFrota();
+}
+function periodoKm() { return { de: $('km-de').value, ate: $('km-ate').value, vid: $('km-fv').value }; }
+function kmNoPeriodo(p) {
+  return registrosKm.filter(function(k) {
+    return (!p.de || k.data >= p.de) && (!p.ate || k.data <= p.ate) && (!p.vid || k.veiculoId == p.vid);
+  }).sort(function(a, b) { return b.data.localeCompare(a.data) || b.id - a.id; });
+}
+// uma linha por viatura: menor KM inicial, maior KM final e soma do rodado no período
+function resumoKm(p) {
+  var regs = kmNoPeriodo(p);
+  return frotaOrdenada().filter(function(v) { return (!p.vid || v.id == p.vid) && (v.ativo || regs.some(function(k) { return k.veiculoId === v.id; })); }).map(function(v) {
+    var rs = regs.filter(function(k) { return k.veiculoId === v.id; });
+    return {
+      v: v,
+      ini: rs.length ? Math.min.apply(null, rs.map(function(k) { return k.kmIni; })) : null,
+      fim: rs.length ? Math.max.apply(null, rs.map(function(k) { return k.kmFim; })) : null,
+      rodado: rs.reduce(function(s, k) { return s + k.kmRodado; }, 0)
+    };
+  });
+}
+function textoPeriodo(p) { return p.de || p.ate ? fmtD(p.de) + ' a ' + fmtD(p.ate) : 'todo o período'; }
+
+var kmFiltroPronto = false;
+function renderFrota() {
+  // na primeira vez abre na semana atual; depois respeita o filtro (vazio = todo o período)
+  if (!kmFiltroPronto) { kmFiltroPronto = true; semanaKm(0); return; }
+  var p = periodoKm(), lista = frotaOrdenada(), regs = kmNoPeriodo(p);
+  var ativas = frota.filter(function(v) { return v.ativo; });
+  $('vt-resumo').textContent = ativas.length + ' ATIVA(S)' + (frota.length > ativas.length ? ' · ' + (frota.length - ativas.length) + ' DESATIVADA(S)' : '');
+
+  $('vt-lista').innerHTML = lista.map(function(v) {
+    var rodado = registrosKm.filter(function(k) { return k.veiculoId === v.id && (!p.de || k.data >= p.de) && (!p.ate || k.data <= p.ate); })
+      .reduce(function(s, k) { return s + k.kmRodado; }, 0);
+    return '<div class="vt-card' + (v.ativo ? '' : ' inativa') + '">' +
+      '<div class="vt-info">' +
+        '<div class="vt-modelo">' + esc(v.modelo) + ' · <span class="placa">' + esc(v.placa) + '</span></div>' +
+        '<div class="hint">Prefixo ' + esc(v.prefixo || '—') + ' · ' + esc(TIPOS_3D[v.tipo3d] || '') + (v.ativo ? '' : ' · desativada') + '</div>' +
+        '<div class="vt-km"><div><div class="vt-km-val">' + fmtKm(ultimoKm(v.id)) + '</div><div class="vt-km-lbl">Último KM</div></div>' +
+        '<div><div class="vt-km-val">' + fmtKm(rodado) + '</div><div class="vt-km-lbl">Rodado no período</div></div></div>' +
+        (v.obs ? '<div class="hint">' + esc(v.obs) + '</div>' : '') +
+        '<div class="btn-group">' + (v.ativo ? '<button class="btn btn-gold btn-sm" onclick="novoKm(' + v.id + ')">+ KM</button>' : '') +
+        '<button class="btn btn-outline btn-sm" onclick="editarViatura(' + v.id + ')">Editar</button></div>' +
+      '</div>' +
+      '<div class="vt-3d" data-vid="' + v.id + '"></div>' +
+    '</div>';
+  }).join('') || vazio('Nenhuma viatura cadastrada. Clique em "+ Nova viatura".');
+
+  // as viaturas em 3D são reaproveitadas entre um desenho e outro da tela (não recria o WebGL)
+  if (window.Viaturas3D) {
+    var chaves = [];
+    document.querySelectorAll('#vt-lista .vt-3d').forEach(function(el) {
+      var v = getViatura(el.dataset.vid), dados = { id: v.id, tipo: v.tipo3d, placa: v.placa, prefixo: v.prefixo };
+      chaves.push(Viaturas3D.chave(dados));
+      Viaturas3D.montar(el, dados);
+    });
+    Viaturas3D.manter(chaves);
+  }
+
+  var opcoes = lista.map(function(v) { return '<option value="' + v.id + '">' + esc(v.modelo + ' · ' + v.placa) + '</option>'; }).join('');
+  var fv = $('km-fv').value;
+  $('km-fv').innerHTML = '<option value="">Todas</option>' + opcoes;
+  $('km-fv').value = fv;
+
+  var total = regs.reduce(function(s, k) { return s + k.kmRodado; }, 0);
+  $('km-resumo').textContent = textoPeriodo(p).toUpperCase() + ' · ' + regs.length + ' REGISTRO(S) · ' + fmtKm(total).toUpperCase();
+  $('km-table').innerHTML = regs.map(function(k) {
+    var v = getViatura(k.veiculoId) || {};
+    return '<tr><td style="white-space:nowrap">' + fmtD(k.data) + '</td><td>' + esc(v.modelo || '—') + '</td><td><span class="placa">' + esc(v.placa || '—') + '</span></td>' +
+      '<td>' + fmtKm(k.kmIni) + '</td><td>' + fmtKm(k.kmFim) + '</td><td style="color:var(--gold);font-weight:600">' + fmtKm(k.kmRodado) + '</td>' +
+      '<td style="font-size:12px;color:var(--tx2)">' + esc(k.resp || '—') + '</td><td style="font-size:12px;color:var(--tx2)">' + esc(k.obs || '—') + '</td>' +
+      '<td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="editarKm(' + k.id + ')">Editar</button> <button class="btn btn-red btn-sm" onclick="excluirKm(' + k.id + ')" aria-label="Excluir">✕</button></td></tr>';
+  }).join('') || '<tr><td colspan="9"><div class="empty">' + (registrosKm.length ? 'Nenhum registro nesse período' : 'Nenhum KM lançado ainda. Clique em "+ Lançar KM".') + '</div></td></tr>';
+}
+
+// ----- lançamento de KM -----
+function abrirFormKm(k, vid) {
+  var ativas = frotaOrdenada().filter(function(v) { return v.ativo || (k && v.id === k.veiculoId); });
+  if (!ativas.length) { showToast('Cadastre primeiro uma viatura', true); novaViatura(); return; }
+  $('km-veiculo').innerHTML = ativas.map(function(v) { return '<option value="' + v.id + '">' + esc(v.modelo + ' · ' + v.placa) + '</option>'; }).join('');
+  $('km-form-tit').textContent = k ? 'Editar KM' : 'Lançar KM';
+  $('km-id').value = k ? k.id : '';
+  $('km-veiculo').value = k ? k.veiculoId : (vid || ativas[0].id);
+  $('km-data').value = k ? k.data : hojeISO();
+  $('km-ini').value = k ? k.kmIni : '';
+  $('km-fim').value = k ? k.kmFim : '';
+  $('km-resp').value = k ? k.resp : '';
+  $('km-obs').value = k ? k.obs : '';
+  if (!k) sugerirKmInicial();
+  $('km-form').hidden = false;
+  document.querySelector('.content').scrollTop = 0;
+  (k ? $('km-fim') : $('km-ini').value ? $('km-fim') : $('km-ini')).focus();
+}
+function novoKm(vid) { abrirFormKm(null, vid); }
+function editarKm(id) { abrirFormKm(registrosKm.filter(function(k) { return k.id === id; })[0]); }
+function cancelarKm() { $('km-form').hidden = true; }
+function sugerirKmInicial() {
+  if ($('km-id').value) return;
+  var u = ultimoKm($('km-veiculo').value);
+  $('km-ini').value = u == null ? '' : u;
+}
+function salvarKm() {
+  var id = $('km-id').value;
+  var k = {
+    veiculoId: Number($('km-veiculo').value), data: $('km-data').value,
+    kmIni: $('km-ini').value === '' ? NaN : Number($('km-ini').value), kmFim: $('km-fim').value === '' ? NaN : Number($('km-fim').value),
+    resp: $('km-resp').value.trim().toUpperCase(), obs: $('km-obs').value.trim()
+  };
+  if (!k.veiculoId) { showToast('Escolha a viatura', true); return; }
+  if (!k.data) { showToast('Informe a data', true); $('km-data').focus(); return; }
+  if (!Number.isInteger(k.kmIni) || k.kmIni < 0) { showToast('Informe o KM inicial (número inteiro)', true); $('km-ini').focus(); return; }
+  if (!Number.isInteger(k.kmFim)) { showToast('Informe o KM final (número inteiro)', true); $('km-fim').focus(); return; }
+  if (k.kmFim < k.kmIni) { showToast('O KM final não pode ser menor que o inicial', true); $('km-fim').focus(); return; }
+  acao(async function() {
+    var row = id
+      ? await db(sb.from('registros_km').update(kmParaBanco(k)).eq('id', id).select().single())
+      : await db(sb.from('registros_km').insert(kmParaBanco(k)).select().single());
+    var novo = kmDoBanco(row);
+    registrosKm = registrosKm.filter(function(x) { return x.id !== novo.id; }).concat([novo]);
+    cancelarKm(); refresh();
+    showToast('KM salvo: ' + fmtKm(novo.kmRodado) + ' rodados');
+  });
+}
+function excluirKm(id) {
+  var k = registrosKm.filter(function(x) { return x.id === id; })[0], v = getViatura(k.veiculoId) || {};
+  if (!confirm('Excluir o KM de ' + fmtD(k.data) + ' da viatura ' + (v.placa || '') + '?')) return;
+  acao(async function() {
+    await db(sb.from('registros_km').delete().eq('id', id));
+    registrosKm = registrosKm.filter(function(x) { return x.id !== id; });
+    refresh(); showToast('Registro excluído');
+  });
+}
+
+// ----- cadastro de viaturas -----
+function abrirViatura(v) {
+  $('mf-title').textContent = v ? 'Editar viatura' : 'Nova viatura';
+  $('vt-id').value = v ? v.id : '';
+  $('vt-modelo').value = v ? v.modelo : '';
+  $('vt-tipo').value = v ? v.tipo3d : 'POLO';
+  $('vt-placa').value = v ? v.placa : '';
+  $('vt-prefixo').value = v ? v.prefixo : '';
+  $('vt-ativo').value = !v || v.ativo ? 'true' : '';
+  $('vt-obs').value = v ? v.obs : '';
+  $('vt-del').hidden = !v;
+  showModal('modal-frota');
+}
+function novaViatura() { abrirViatura(null); }
+function editarViatura(id) { abrirViatura(getViatura(id)); }
+function salvarViatura() {
+  var id = $('vt-id').value;
+  var placa = $('vt-placa').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  var v = {
+    modelo: $('vt-modelo').value.trim(), tipo3d: $('vt-tipo').value, placa: placa,
+    prefixo: $('vt-prefixo').value.trim().toUpperCase() || (placa ? 'VTR' + placa.slice(3) : ''),
+    ativo: $('vt-ativo').value === 'true', obs: $('vt-obs').value.trim()
+  };
+  if (!v.modelo) { showToast('Informe o modelo', true); $('vt-modelo').focus(); return; }
+  if (!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa)) { showToast('Placa inválida — use o formato ABC1D23 ou ABC1234', true); $('vt-placa').focus(); return; }
+  if (frota.some(function(x) { return x.placa === placa && x.id != id; })) { showToast('Já existe uma viatura com a placa ' + placa, true); return; }
+  acao(async function() {
+    var row = id
+      ? await db(sb.from('veiculos_frota').update(frotaParaBanco(v)).eq('id', id).select().single())
+      : await db(sb.from('veiculos_frota').insert(frotaParaBanco(v)).select().single());
+    var nova = frotaDoBanco(row);
+    frota = frota.filter(function(x) { return x.id !== nova.id; }).concat([nova]);
+    closeModal('modal-frota'); refresh();
+    showToast('Viatura ' + nova.placa + ' salva');
+  });
+}
+function excluirViatura() {
+  var v = getViatura($('vt-id').value);
+  if (!v) return;
+  var n = kmDaViatura(v.id).length;
+  if (!confirm('Excluir a viatura ' + v.placa + '?' + (n ? '\n\nOs ' + n + ' registro(s) de KM dela também serão apagados. Para guardar o histórico, prefira "Desativada".' : ''))) return;
+  acao(async function() {
+    await db(sb.from('veiculos_frota').delete().eq('id', v.id));
+    frota = frota.filter(function(x) { return x.id !== v.id; });
+    registrosKm = registrosKm.filter(function(k) { return k.veiculoId !== v.id; });
+    closeModal('modal-frota'); refresh(); showToast('Viatura excluída');
+  });
+}
+
+// ----- planilha semanal e termo de recebimento -----
+function csvSemana() {
+  var p = periodoKm(), linhas = resumoKm(p);
+  if (!linhas.length) { showToast('Nenhuma viatura para exportar', true); return; }
+  var total = linhas.reduce(function(s, l) { return s + l.rodado; }, 0);
+  var rows = [['Viatura', 'Placa', 'Prefixo', 'KM inicial', 'KM final', 'KM rodado']].concat(linhas.map(function(l) {
+    return [l.v.modelo, l.v.placa, l.v.prefixo || '', l.ini == null ? '' : l.ini, l.fim == null ? '' : l.fim, l.rodado];
+  })).concat([['Total', '', '', '', '', total]]);
+  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); });
+  download('ourotran_km_' + (p.de || 'inicio') + '_a_' + (p.ate || 'hoje') + '.csv', '﻿' + ['"Controle de KM — Ourotran";"' + textoPeriodo(p) + '"'].concat(csv).join('\r\n'), 'text/csv;charset=utf-8');
+  showToast('Planilha exportada!');
+}
+// página A4 com o cabeçalho da Ourotran e da Prefeitura; no diálogo dá para "Salvar como PDF"
+function janelaImpressao(titulo, corpo) {
+  var cab = new URL('cabecalho.png', location.href).href;
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>' + esc(titulo) + '</title><style>' +
+    '@page{size:A4;margin:16mm}body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0}.cab{width:100%;display:block;margin-bottom:10px}' +
+    'h1{font-size:17px;text-align:center;margin:6px 0 14px}h2{font-size:13px;margin:18px 0 6px}p{line-height:1.6;text-align:justify}' +
+    'table{width:100%;border-collapse:collapse;margin-top:6px}th,td{border:1px solid #999;padding:7px 8px;text-align:left}th{background:#d9e2f3;font-size:11px}' +
+    '.num{text-align:right;white-space:nowrap}.pl{font-family:monospace;letter-spacing:1px}.tot td{font-weight:bold;background:#f2f2f2}' +
+    '.ass td{height:30px}.ass td:first-child{width:22%;font-weight:bold}.linha{border-bottom:1px solid #000;display:inline-block;min-width:60%}' +
+    '</style></head><body><img class="cab" src="' + esc(cab) + '" alt="OuroTran e Prefeitura de Ouro Preto">' + corpo + '</body></html>';
+  var w = window.open('', '_blank');
+  if (!w) { showToast('Permita pop-ups para imprimir', true); return; }
+  w.document.write(html); w.document.close(); w.focus();
+  var impresso = false;
+  function imprimir() { if (!impresso) { impresso = true; w.print(); } }
+  w.onload = imprimir; setTimeout(imprimir, 1500);
+}
+function tabelaResumoKm(linhas) {
+  var total = linhas.reduce(function(s, l) { return s + l.rodado; }, 0);
+  return '<table><thead><tr><th>Nº</th><th>Viatura</th><th>Placa</th><th>Prefixo</th><th class="num">KM inicial</th><th class="num">KM final</th><th class="num">KM rodado</th></tr></thead><tbody>' +
+    linhas.map(function(l, i) {
+      return '<tr><td>' + (i + 1) + '</td><td>' + esc(l.v.modelo) + '</td><td class="pl">' + esc(l.v.placa) + '</td><td>' + esc(l.v.prefixo || '') + '</td>' +
+        '<td class="num">' + fmtKm(l.ini) + '</td><td class="num">' + fmtKm(l.fim) + '</td><td class="num">' + fmtKm(l.rodado) + '</td></tr>';
+    }).join('') + '<tr class="tot"><td colspan="6">Total</td><td class="num">' + fmtKm(total) + '</td></tr></tbody></table>';
+}
+function imprimirPlanilhaKm() {
+  var p = periodoKm(), linhas = resumoKm(p);
+  if (!linhas.length) { showToast('Nenhuma viatura para imprimir', true); return; }
+  janelaImpressao('Ourotran — Controle de KM ' + textoPeriodo(p),
+    '<h1>Planilha de Controle de KM</h1><p><b>Período de referência:</b> ' + esc(textoPeriodo(p)) + ' · Emitida em ' + fmtD(hojeISO()) + '</p>' + tabelaResumoKm(linhas));
+}
+function imprimirTermoKm() {
+  var p = periodoKm(), linhas = resumoKm(p);
+  if (!linhas.length) { showToast('Nenhuma viatura cadastrada', true); return; }
+  var data = '____/____/________', hora = '____:____';
+  janelaImpressao('Ourotran — Termo de Recebimento do Controle de KM',
+    '<h1>Termo de Recebimento do Controle de KM</h1>' +
+    '<h2>Declaração</h2><p>Declaro, para os devidos fins, que recebi o <b>controle de quilometragem (KM)</b> dos veículos locados relacionados abaixo, utilizados pela <b>Ourotran</b>, para acompanhamento da área de Transporte.</p>' +
+    '<p><b>Período de referência:</b> ' + (p.de && p.ate ? fmtD(p.de) + ' a ' + fmtD(p.ate) : data + ' a ' + data) + '</p>' +
+    '<h2>Veículos</h2>' + tabelaResumoKm(linhas) +
+    '<h2>Assinaturas</h2><table class="ass"><thead><tr><th></th><th>Entregue por</th><th>Recebido por</th></tr></thead><tbody>' +
+    '<tr><td>Nome</td><td></td><td></td></tr><tr><td>Setor</td><td></td><td>Transporte</td></tr>' +
+    '<tr><td>Data</td><td>' + data + '</td><td>' + data + '</td></tr><tr><td>Hora</td><td>' + hora + '</td><td>' + hora + '</td></tr>' +
+    '<tr><td style="height:48px">Assinatura</td><td></td><td></td></tr></tbody></table>' +
+    '<p style="margin-top:22px"><b>Observações:</b> <span class="linha">&nbsp;</span></p>');
+}
+
 // ---------- WhatsApp ----------
 function buildMsg(p) {
   return ($('wpp-msg').value || MSG_PADRAO).replace(/{NOME}/g, p.nome).replace(/{PLACA}/g, p.placa || 'sem placa').replace(/{PONTO}/g, p.ponto || '—').replace(/{OBS}/g, p.obs || 'Documentação irregular');
@@ -1795,7 +2174,7 @@ function exportCSV() {
 
 // cópia de segurança em arquivo, além do banco
 function exportBackup() {
-  var dados = { app: 'ourotran', versao: 2, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, motoristasAuxiliares: auxiliares, wppMsg: $('wpp-msg').value === MSG_PADRAO ? '' : $('wpp-msg').value };
+  var dados = { app: 'ourotran', versao: 3, gerado: new Date().toISOString(), permissionarios: permissionarios, fiscalizacoes: fiscalizacoes, motoristasAuxiliares: auxiliares, veiculosFrota: frota, registrosKm: registrosKm, wppMsg: $('wpp-msg').value === MSG_PADRAO ? '' : $('wpp-msg').value };
   download('ourotran_backup_' + hojeISO() + '.json', JSON.stringify(dados, null, 1), 'application/json');
   showToast('Backup salvo!');
 }
@@ -1820,6 +2199,20 @@ async function importarDados(d) {
   for (i = 0; i < fiscs.length; i += 500) await db(sb.from('fiscalizacoes').upsert(fiscs.slice(i, i + 500)));
   var auxs = (d.motoristasAuxiliares || []).filter(function(a) { return ids[a.permId]; }).map(function(a) { var r = auxParaBanco(a); r.id = a.id; return r; });
   for (i = 0; i < auxs.length; i += 500) await db(sb.from('motoristas_auxiliares').upsert(auxs.slice(i, i + 500)));
+  // a placa é única: se ela já está cadastrada com outro número, o KM do backup vai para a viatura que já existe
+  var idVt = {};
+  frota.forEach(function(v) { idVt[v.id] = v.id; });
+  var vts = [];
+  (d.veiculosFrota || []).forEach(function(v) {
+    var mesma = frota.filter(function(x) { return x.placa === v.placa && x.id !== v.id; })[0];
+    if (mesma) { idVt[v.id] = mesma.id; return; }
+    var r = frotaParaBanco(v); r.id = v.id; vts.push(r); idVt[v.id] = v.id;
+  });
+  if (vts.length) await db(sb.from('veiculos_frota').upsert(vts));
+  var kms = (d.registrosKm || []).filter(function(k) { return idVt[k.veiculoId]; }).map(function(k) {
+    var r = kmParaBanco(k); r.id = k.id; r.veiculo_id = idVt[k.veiculoId]; return r;
+  });
+  for (i = 0; i < kms.length; i += 500) await db(sb.from('registros_km').upsert(kms.slice(i, i + 500)));
   if (d.wppMsg) await db(sb.from('configuracoes').upsert({ chave: 'wpp_msg', valor: d.wppMsg }));
   await carregarDados();
 }
@@ -1870,7 +2263,7 @@ function descartarAntigos() { if (confirm('Apagar os dados antigos deste navegad
 
 // ---------- teclado ----------
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeModal('modal-perm'); toggleNav(false); }
+  if (e.key === 'Escape') { closeModal('modal-perm'); closeModal('modal-frota'); toggleNav(false); }
 });
 </script>
 </body>

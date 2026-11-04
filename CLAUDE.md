@@ -28,10 +28,22 @@ Autoria dos commits: Hugo Marotta.
     "Reabrir agora" muda o `fim` para agora; o feed mantém a interdição por 2 dias para o Waze ver o novo fim.
   - Tela "Interdições" no `index.html` (mapa Leaflet + OpenStreetMap) e página pública `interdicoes.html`.
   - Políticas de admin/guarda usam `to authenticated`: o anônimo não pode avaliar `privado.papel()` (dá erro 401).
+- Controle de KM da frota locada (viaturas da própria OuroTran): tabelas `veiculos_frota` (modelo, `tipo_modelo_3d` =
+  `POLO` / `S10_CABINE_SIMPLES` / `S10` (cabine dupla), placa única, `prefixo` pintado na porta = "VTR" + final da placa, `ativo`)
+  e `registros_km` (`veiculo_id` com cascade, data, `km_inicial`, `km_final`, `km_rodado` calculado pelo banco,
+  responsável, observação; o banco recusa KM final menor que o inicial). **Só admin** lê e grava (a Guarda não vê).
+  As 4 viaturas foram cadastradas direto no banco, não em arquivo do repositório.
+  - `viaturas3d.js`: viaturas em 3D (Three.js 0.128 pelo CDN, carregado só quando a aba abre). Os modelos são montados no
+    próprio código (forma lateral extrudada, sem .glb). A plotagem da foto oficial (amarelo-limão, faixas brancas e pretas em
+    onda, xadrez, brasão `brasao-ourotran.png`, "118" com telefone, prefixo, giroflex) é pintada em canvas. Placa e prefixo vêm
+    do banco e são desenhados na hora. Zoom só com Ctrl + rolagem ou pinça, para a rolagem continuar descendo a página.
+    `Viaturas3D.montar` reaproveita a cena quando a tela é redesenhada; ela só pausa quando o cartão sai da tela.
+  - Termo de recebimento e planilha da semana são impressos com `cabecalho.png` (logos da OuroTran e da Prefeitura).
+  - `referencias/` (foto da viatura) e `*.docx` ficam fora do git (`.gitignore`): a foto mostra a placa de terceiros.
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
 - A chave `sb_publishable_...` no código é pública por design; nunca colocar a `service_role` no front-end.
 - O JS usa nomes camelCase (`numPerm`, `vencPerm`, `permId`, `wpp`); a conversão para as colunas fica em
-  `permDoBanco`/`permParaBanco` e `fiscDoBanco`/`fiscParaBanco`.
+  `permDoBanco`/`permParaBanco`, `fiscDoBanco`/`fiscParaBanco`, `frotaDoBanco`/`frotaParaBanco` e `kmDoBanco`/`kmParaBanco`.
 
 ## Abas
 
@@ -42,7 +54,10 @@ checklist; ao registrar, `salvarFisc` grava os auxiliares, a fiscalização e at
 permissionário) · WhatsApp (fila de envio,
 uma conversa por clique, porque o navegador bloqueia várias janelas) · Guarda Municipal (consulta de placa em todos os
 tipos, filtro por tipo, impressão/PDF, WhatsApp e e-mail para o contato salvo) · Usuários (admin libera e-mails de
-administradores e da Guarda) · Notificações · Histórico (busca, filtro, CSV) · Backup em JSON.
+administradores e da Guarda) · Controle de KM (`page-frota`, só admin: cartão de cada viatura com o 3D ao lado; lançar
+KM, com o KM inicial puxado do último KM final; filtro por período, que abre na semana de segunda a domingo, e por
+viatura; planilha CSV, impressão e termo de recebimento; cadastro e desativação de viaturas no `modal-frota`) ·
+Notificações · Histórico (busca, filtro, CSV) · Backup em JSON (versão 3 inclui `veiculosFrota` e `registrosKm`).
 
 ## Convenções
 
