@@ -19,6 +19,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -68,7 +69,7 @@ def montar_alerta(cfg: dict, registro: dict) -> dict:
                 break
             time.sleep(0.2)
     return {
-        "acao": "alerta", "camera": registro.get("camera"), "quando": registro.get("quando"),
+        "acao": "alerta", "id_envio": uuid.uuid4().hex, "camera": registro.get("camera"), "quando": registro.get("quando"),
         "tipo": registro.get("tipo"), "pontuacao": registro.get("pontuacao"),
         "detalhes": registro.get("detalhes") or {}, "foto_base64": foto_b64,
     }

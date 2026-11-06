@@ -1205,7 +1205,7 @@ function monAvisarNaTela(novos, forte) {
 var tituloBase = document.title;
 function monTitulo(n) { document.title = (n ? '(' + n + ') ' : '') + tituloBase; }
 
-var monCarregando = false;
+var monCarregando = false, monAtualizadoEm = null, monFalhaDesde = null;
 async function carregarMonitor(manual) {
   clearTimeout(monTimer);
   if (papel !== 'admin' || !sessaoAtual || monCarregando) return;
@@ -1227,11 +1227,14 @@ async function carregarMonitor(manual) {
       showToast((forte ? '🚨 ALERTA' : '⚠️ Atenção') + ' na câmera ' + novos[0].camera_nome + (novos.length > 1 ? ' (+' + (novos.length - 1) + ')' : ''), forte);
     }
     await monAssinarFotos();
+    monAtualizadoEm = new Date(); monFalhaDesde = null;
     monBadge();
     if (paginaAtual === 'monitoramento') renderMonitor();
     if (manual) showToast('Monitoramento atualizado');
   } catch (e) {
     console.error(e);
+    if (!monFalhaDesde) monFalhaDesde = new Date();
+    if (paginaAtual === 'monitoramento') renderMonitor();
     if (manual) falha(e);
   } finally {
     monCarregando = false;
@@ -1279,7 +1282,10 @@ function renderMonitor() {
   selCam.value = atual;
   var st = $('mon-f-status').value, cam = selCam.value;
   var lista = monAlertas.filter(function(a) { return (!st || a.status === st) && (!cam || String(a.camera_id) === cam); });
-  $('mon-resumo').textContent = lista.length + ' ALERTA(S)';
+  var hora = function(d) { return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); };
+  $('mon-resumo').textContent = lista.length + ' ALERTA(S)' + (monFalhaDesde ? ' · ⚠️ SEM CONEXÃO DESDE ' + hora(monFalhaDesde) + ', TENTANDO DE NOVO'
+    : monAtualizadoEm ? ' · ATUALIZADO ÀS ' + hora(monAtualizadoEm) : '');
+  $('mon-resumo').style.color = monFalhaDesde ? 'var(--red)' : '';
 
   $('mon-lista').innerHTML = lista.map(function(a) {
     var url = a.foto && monFotos[a.foto] && monFotos[a.foto].url, forte = a.nivel === 'ALERTA';
@@ -1293,7 +1299,7 @@ function renderMonitor() {
       ? '<button class="btn btn-red btn-sm" onclick="validarAlerta(' + a.id + ', \'CONFIRMADO\')">✔ Confirmar</button>' +
         '<button class="btn btn-outline btn-sm" onclick="validarAlerta(' + a.id + ', \'DESCARTADO\')">✕ Descartar (alarme falso)</button>'
       : '<button class="btn btn-outline btn-sm" onclick="validarAlerta(' + a.id + ', \'NOVO\')">↶ Voltar para conferir</button>';
-    botoes += '<button class="btn btn-wpp btn-sm" onclick="acionarGuardaAlerta(' + a.id + ')">📱 Acionar Guarda</button>';
+    if (a.status !== 'DESCARTADO') botoes += '<button class="btn btn-wpp btn-sm" onclick="acionarGuardaAlerta(' + a.id + ')">📱 Acionar Guarda</button>';
     return '<div class="mon-al ' + esc(a.nivel) + (a.status === 'NOVO' ? '' : ' feito') + '">' + foto +
       '<div><div class="mon-tit"><span class="pill ' + (forte ? 'alerta">ALERTA' : 'atencao">ATENÇÃO') + '</span>' + esc(MON_TIPOS[a.tipo] || a.tipo) + situacao + '</div>' +
       '<div class="mon-det">📹 ' + esc(a.camera_nome) + ' · 🕒 ' + fmtDH(a.quando) + (a.pontuacao != null ? ' · certeza da IA ' + Math.round(a.pontuacao * 100) + '%' : '') + '</div>' +
@@ -1333,7 +1339,8 @@ function acionarGuardaAlerta(id) {
   var c = monCameras.find(function(x) { return x.id === a.camera_id; });
   var msg = '🚨 *OuroTran — alerta de câmera*\n\n' + (MON_TIPOS[a.tipo] || a.tipo) + '\n📹 Câmera: ' + a.camera_nome +
     (c && c.local ? '\n📍 Local: ' + c.local : '') + '\n🕒 ' + fmtDH(a.quando) +
-    '\n\nAlerta gerado por IA e conferido pela equipe da OuroTran. Favor verificar no local.';
+    '\n\n' + (a.status === 'CONFIRMADO' ? 'Alerta gerado por IA e confirmado pela equipe da OuroTran.' + (a.observacao ? '\n📝 ' + a.observacao : '')
+      : 'Alerta gerado por IA, ainda em conferência pela equipe da OuroTran.') + '\nFavor verificar no local.';
   var tel = config.guarda_tel;
   window.open(waLink(telValido(tel) ? tel : '', msg), '_blank', 'noopener');
 }

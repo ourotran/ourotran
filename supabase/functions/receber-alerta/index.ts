@@ -1,7 +1,8 @@
 // Recebe os alertas das câmeras com IA (Vigia), enviados pela ponte que roda no computador da OuroTran.
 // Só aceita quem manda a chave da ponte no cabeçalho "x-chave-ponte"; no banco fica apenas o hash dela (tabela chaves_ponte).
 // O vídeo nunca sai do computador: chega aqui só o alerta e a foto do momento, que vai para um bucket privado.
-//   POST {acao: "alerta", camera, quando, tipo, pontuacao, detalhes, foto_base64}
+//   POST {acao: "alerta", id_envio, camera, quando, tipo, pontuacao, detalhes, foto_base64}
+//        (id_envio: código único gerado pela ponte; o mesmo alerta reenviado não é gravado duas vezes)
 //   POST {acao: "sinal", cameras: ["nome", ...]}   (a cada minuto: mostra no app que a câmera está online)
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -65,6 +66,11 @@ Deno.serve(async (req: Request) => {
     }
 
     if (corpo.acao !== "alerta") return resposta({ erro: "acao desconhecida" }, 400);
+    const idEnvio = typeof corpo.id_envio === "string" && corpo.id_envio ? corpo.id_envio.slice(0, 64) : null;
+    if (idEnvio) {
+      const ja = await sb.from("alertas_cameras").select("id").eq("id_envio", idEnvio).maybeSingle();
+      if (ja.data) return resposta({ ok: true, id: ja.data.id, repetido: true });
+    }
     const nome = String(corpo.camera || "camera").slice(0, 80);
     const tipo = String(corpo.tipo || "desconhecido").slice(0, 60);
     const camId = await camera(nome);
@@ -81,13 +87,17 @@ Deno.serve(async (req: Request) => {
 
     const pont = Number(corpo.pontuacao);
     const ins = await sb.from("alertas_cameras").insert({
-      camera_id: camId, camera_nome: nome, quando, tipo,
+      id_envio: idEnvio, camera_id: camId, camera_nome: nome, quando, tipo,
       nivel: FORTES.includes(tipo) ? "ALERTA" : "ATENCAO",
       pontuacao: isFinite(pont) ? pont : null,
       detalhes: typeof corpo.detalhes === "object" && corpo.detalhes ? corpo.detalhes : {},
       foto,
     }).select("id").single();
-    if (ins.error) throw ins.error;
+    if (ins.error) {
+      if (foto) await sb.storage.from("alertas-cameras").remove([foto]); // não deixa foto sem alerta
+      if (ins.error.code === "23505") return resposta({ ok: true, repetido: true }); // reenvio simultâneo
+      throw ins.error;
+    }
     return resposta({ ok: true, id: ins.data.id });
   } catch (e) {
     console.error(e);
