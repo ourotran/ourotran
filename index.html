@@ -2190,7 +2190,7 @@ function renderGuarda() {
     var auxPlaca = achados.length ? auxDoPerm(achados[0].id) : [];
     if (auxPlaca.length) res += '<div class="g-resultado ' + (auxPlaca.some(function(a) { return a.situacao === 'IRREGULAR'; }) ? 'irr' : 'ok') + '">👥 Motoristas auxiliares: ' +
       auxPlaca.map(function(a) { return esc(a.nome) + ' — ' + esc(a.situacao); }).join('; ') + '</div>';
-    else res = '<div class="g-resultado irr">⚠️ Placa ' + esc(qPlaca) + ' não está cadastrada na OuroTran (táxi, turismo ou escolar)</div>';
+    if (!achados.length) res ='<div class="g-resultado irr">⚠️ Placa ' + esc(qPlaca) + ' não está cadastrada na OuroTran (táxi, turismo ou escolar)</div>';
   }
   $('g-resultado').innerHTML = res;
   $('g-irr').textContent = irrList.length;
