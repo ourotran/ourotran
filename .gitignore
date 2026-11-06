@@ -1,3 +1,5 @@
 # foto de referência da viatura (mostra a placa de um veículo de terceiro) e documentos de trabalho
 referencias/
 *.docx
+# material para a imprensa (gerado com dados fictícios, fica só no computador)
+imprensa/
