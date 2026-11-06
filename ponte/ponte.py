@@ -115,13 +115,25 @@ def criar_servidor(cfg: dict) -> ThreadingHTTPServer:
             pass
 
     # só aceita conexões deste computador
-    return ThreadingHTTPServer(("127.0.0.1", PORTA), Receptor)
+    try:
+        return ThreadingHTTPServer(("127.0.0.1", PORTA), Receptor)
+    except OSError:
+        sys.exit(f"A porta {PORTA} já está em uso: a ponte provavelmente já está aberta em outra janela.")
+
+
+# câmera -> processo do Vigia; o sinal de "no ar" só vai para câmera com o Vigia aberto
+vigias: dict[str, subprocess.Popen] = {}
+
+
+def cameras_no_ar(cfg: dict) -> list[str]:
+    if "--sem-vigia" in sys.argv:  # o Vigia foi aberto à mão: vale o que está ativo no config
+        return [c["nome"] for c in cfg["cameras"] if c.get("ativa") is not False]
+    return [nome for nome, p in vigias.items() if p.poll() is None]
 
 
 def sinal_periodico(cfg: dict) -> None:
-    nomes = [c["nome"] for c in cfg["cameras"]]
     while True:
-        if enviar(cfg, {"acao": "sinal", "cameras": nomes}):
+        if enviar(cfg, {"acao": "sinal", "cameras": cameras_no_ar(cfg)}):
             reenviar_pendentes(cfg)
         time.sleep(60)
 
@@ -139,7 +151,9 @@ def abrir_vigias(cfg: dict) -> list[subprocess.Popen]:
                "--webhook", f"http://127.0.0.1:{PORTA}/alerta", "--pasta", cfg.get("pasta_alertas", "alertas_ourotran")]
         cmd += c.get("opcoes", [])
         print(f"[ponte] abrindo o Vigia na câmera '{c['nome']}'", flush=True)
-        procs.append(subprocess.Popen(cmd, cwd=pasta))
+        p = subprocess.Popen(cmd, cwd=pasta)
+        vigias[c["nome"]] = p
+        procs.append(p)
     return procs
 
 
@@ -147,14 +161,15 @@ def main() -> None:
     cfg = carregar_config()
     srv = criar_servidor(cfg)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
-    threading.Thread(target=sinal_periodico, args=(cfg,), daemon=True).start()
     print(f"[ponte] recebendo alertas do Vigia em http://127.0.0.1:{PORTA}/alerta", flush=True)
     procs = abrir_vigias(cfg) if "--sem-vigia" not in sys.argv else []
+    threading.Thread(target=sinal_periodico, args=(cfg,), daemon=True).start()
     try:
         while True:
             time.sleep(1)
             if procs and all(p.poll() is not None for p in procs):
-                print("[ponte] o Vigia foi fechado; encerrando a ponte.", flush=True)
+                print("[ponte] o Vigia foi fechado; encerrando a ponte. Se ele fechou sozinho logo ao abrir, "
+                      "confira a 'fonte' da câmera no config.json (endereço RTSP, usuário e senha).", flush=True)
                 break
     except KeyboardInterrupt:
         pass

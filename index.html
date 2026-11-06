@@ -779,7 +779,7 @@ body.modo-guarda .so-admin{display:none!important}
     <section class="page" id="page-monitoramento">
       <div class="form-header">
         <div><div class="form-title">Monitoramento com IA</div><div class="form-sub">PILOTO NA OUROTRAN · CÂMERAS COM O VIGIA</div></div>
-        <div class="btn-group"><button class="btn btn-outline" onclick="monSirene(true)">🔊 Testar sirene</button><button class="btn btn-outline" onclick="carregarMonitor(true)">↻ Atualizar</button></div>
+        <div class="btn-group"><span id="mon-som" class="pill autuado"></span><button class="btn btn-outline" id="mon-avisos" onclick="monPedirAvisos()" hidden></button><button class="btn btn-outline" onclick="monSirene(true)">🔊 Testar sirene</button><button class="btn btn-outline" onclick="carregarMonitor(true)">↻ Atualizar</button></div>
       </div>
       <div class="kpi-grid mon-kpis">
         <div class="kpi"><div class="kpi-lbl">Para conferir</div><div class="kpi-val" id="mon-k-novos">0</div><div class="kpi-sub">alertas novos</div></div>
@@ -1116,7 +1116,8 @@ async function carregarDados() {
 
 // ---------- monitoramento com IA (piloto das câmeras com o Vigia) ----------
 // Os alertas chegam pela Edge Function receber-alerta (enviados pela ponte do computador das câmeras).
-// Só admin lê. A tela busca de novo a cada 20 s e apita quando chega alerta novo.
+// Só admin lê. A tela busca de novo a cada 20 s; alerta novo toca a sirene, mostra aviso na tela (se a aba estiver
+// atrás de outra janela) e põe o número de alertas para conferir no título da aba.
 var monAlertas = [], monCameras = [], monFotos = {}, monUltimoId = null, monTimer = null;
 var MON_TIPOS = {
   possivel_ocultacao: 'Possível ocultação de objeto',
@@ -1136,10 +1137,30 @@ function monDetalhes(a) {
   if (d.origem === 'modelo') partes.push('modelo treinado');
   return partes.join(' · ');
 }
+// O navegador só deixa tocar som depois de um clique ou tecla na página. Um único AudioContext é
+// criado e liberado no primeiro clique; até lá a tela mostra o aviso "clique para ativar o som".
+var monAudio = null;
+function monCtx() {
+  if (!monAudio) {
+    try { monAudio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    monAudio.onstatechange = monStatusSom;
+  }
+  return monAudio;
+}
+function monLiberarSom() { var c = monCtx(); if (c && c.state === 'suspended') c.resume().then(monStatusSom, function() {}); }
+['pointerdown', 'keydown'].forEach(function(ev) { document.addEventListener(ev, monLiberarSom, true); });
+function monStatusSom() {
+  var el = $('mon-som'); if (!el) return;
+  var ok = monAudio && monAudio.state === 'running';
+  el.textContent = ok ? '🔈 Sirene ligada' : '🔇 Clique em qualquer lugar para ligar a sirene';
+  el.className = 'pill ' + (ok ? 'regular' : 'autuado');
+}
 // sirene (sobe e desce o tom): ALERTA = 3 ciclos rápidos e mais altos; ATENÇÃO = 2 ciclos lentos
 function monSirene(forte) {
   try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)(), t0 = ctx.currentTime;
+    var ctx = monCtx(); if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    var t0 = ctx.currentTime + 0.02;
     var ciclos = forte ? 3 : 2, dur = forte ? 0.9 : 1.2, vol = forte ? 0.22 : 0.14;
     var o = ctx.createOscillator(), g = ctx.createGain();
     o.type = 'sawtooth'; o.connect(g); g.connect(ctx.destination);
@@ -1153,13 +1174,42 @@ function monSirene(forte) {
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.05);
     g.gain.setValueAtTime(vol, fim - 0.1); g.gain.linearRampToValueAtTime(0, fim);
     o.start(t0); o.stop(fim);
-    setTimeout(function() { ctx.close(); }, (ciclos * dur + 0.5) * 1000);
   } catch (e) {}
 }
 
+// aviso do Windows/celular quando a aba do sistema não está na frente (precisa da permissão do navegador)
+function monPedirAvisos() {
+  if (!('Notification' in window)) { showToast('Este navegador não mostra avisos na tela', true); return; }
+  Notification.requestPermission().then(function(p) {
+    monStatusAvisos();
+    showToast(p === 'granted' ? 'Avisos na tela ligados' : 'O navegador não liberou os avisos. Libere no cadeado ao lado do endereço do site.', p !== 'granted');
+  });
+}
+function monStatusAvisos() {
+  var b = $('mon-avisos'); if (!b) return;
+  var p = 'Notification' in window ? Notification.permission : 'denied';
+  b.hidden = p === 'granted';
+  b.textContent = p === 'denied' ? '🔕 Avisos bloqueados no navegador' : '🔔 Ligar avisos na tela';
+}
+function monAvisarNaTela(novos, forte) {
+  if (!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
+  try {
+    var a = novos[0];
+    var n = new Notification((forte ? '🚨 ALERTA' : '⚠️ Atenção') + ' — câmera ' + a.camera_nome, {
+      body: (MON_TIPOS[a.tipo] || a.tipo) + ' · ' + fmtDH(a.quando) + (novos.length > 1 ? ' (+' + (novos.length - 1) + ' alerta(s))' : ''),
+      icon: 'brasao-ourotran.png', tag: 'ourotran-monitoramento', requireInteraction: forte
+    });
+    n.onclick = function() { window.focus(); irPara('monitoramento'); n.close(); };
+  } catch (e) {}
+}
+var tituloBase = document.title;
+function monTitulo(n) { document.title = (n ? '(' + n + ') ' : '') + tituloBase; }
+
+var monCarregando = false;
 async function carregarMonitor(manual) {
   clearTimeout(monTimer);
-  if (papel !== 'admin' || !sessaoAtual) return;
+  if (papel !== 'admin' || !sessaoAtual || monCarregando) return;
+  monCarregando = true;
   try {
     var desde = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
     var r = await Promise.all([
@@ -1173,6 +1223,7 @@ async function carregarMonitor(manual) {
     if (novos.length) {
       var forte = novos.some(function(a) { return a.nivel === 'ALERTA'; });
       monSirene(forte);
+      monAvisarNaTela(novos, forte);
       showToast((forte ? '🚨 ALERTA' : '⚠️ Atenção') + ' na câmera ' + novos[0].camera_nome + (novos.length > 1 ? ' (+' + (novos.length - 1) + ')' : ''), forte);
     }
     await monAssinarFotos();
@@ -1182,21 +1233,29 @@ async function carregarMonitor(manual) {
   } catch (e) {
     console.error(e);
     if (manual) falha(e);
+  } finally {
+    monCarregando = false;
   }
-  monTimer = setTimeout(carregarMonitor, 20000);
+  // a sessão pode ter saído enquanto a consulta rodava
+  if (papel === 'admin' && sessaoAtual) monTimer = setTimeout(carregarMonitor, 20000);
 }
+// os links das fotos valem 6 h; são renovados quando falta menos de meia hora
 async function monAssinarFotos() {
-  var faltam = monAlertas.map(function(a) { return a.foto; }).filter(function(f) { return f && !monFotos[f]; });
+  var limite = Date.now() + 30 * 60 * 1000;
+  var faltam = monAlertas.map(function(a) { return a.foto; }).filter(function(f, i, l) { return f && l.indexOf(f) === i && !(monFotos[f] && monFotos[f].ate > limite); });
   if (!faltam.length) return;
   var r = await sb.storage.from('alertas-cameras').createSignedUrls(faltam, 6 * 3600);
-  (r.data || []).forEach(function(x) { if (x.signedUrl) monFotos[x.path] = x.signedUrl; });
+  var ate = Date.now() + 6 * 3600 * 1000;
+  (r.data || []).forEach(function(x) { if (x.signedUrl) monFotos[x.path] = { url: x.signedUrl, ate: ate }; });
 }
 function monBadge() {
   var n = monAlertas.filter(function(a) { return a.status === 'NOVO'; }).length;
   $('b-mon').textContent = n || ''; $('b-mon').hidden = !n;
+  monTitulo(n);
 }
 
 function renderMonitor() {
+  monStatusSom(); monStatusAvisos();
   var cams = monCameras, noAr = cams.filter(camNoAr).length;
   var conf = monAlertas.filter(function(a) { return a.status === 'CONFIRMADO'; }).length;
   var desc = monAlertas.filter(function(a) { return a.status === 'DESCARTADO'; }).length;
@@ -1223,8 +1282,8 @@ function renderMonitor() {
   $('mon-resumo').textContent = lista.length + ' ALERTA(S)';
 
   $('mon-lista').innerHTML = lista.map(function(a) {
-    var url = a.foto && monFotos[a.foto], forte = a.nivel === 'ALERTA';
-    var foto = url ? '<button class="mon-foto" onclick="window.open(\'' + esc(url) + '\', \'_blank\', \'noopener\')" aria-label="Abrir a foto do alerta"><img class="mon-foto" src="' + esc(url) + '" alt="Foto do alerta da câmera ' + esc(a.camera_nome) + '"></button>'
+    var url = a.foto && monFotos[a.foto] && monFotos[a.foto].url, forte = a.nivel === 'ALERTA';
+    var foto = url ? '<a class="mon-foto" href="' + esc(url) + '" target="_blank" rel="noopener" title="Abrir a foto em tamanho grande"><img class="mon-foto" src="' + esc(url) + '" alt="Foto do alerta da câmera ' + esc(a.camera_nome) + '"></a>'
       : '<div class="mon-foto sem">sem foto</div>';
     var situacao = a.status === 'NOVO' ? '<span class="pill novo">Para conferir</span>'
       : a.status === 'CONFIRMADO' ? '<span class="pill irregular">Confirmado</span>' : '<span class="pill encerrada">Descartado</span>';
@@ -1285,7 +1344,7 @@ var sessaoAtual = null;
 function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
 function mostrarLogin(msg, erro) {
   permissionarios = []; fiscalizacoes = []; auxiliares = []; interdicoes = []; editInt = null; frota = []; registrosKm = [];
-  clearTimeout(monTimer); monAlertas = []; monCameras = []; monFotos = {}; monUltimoId = null;
+  clearTimeout(monTimer); monAlertas = []; monCameras = []; monFotos = {}; monUltimoId = null; monTitulo(0); $('b-mon').hidden = true;
   if (window.Viaturas3D) Viaturas3D.limparTudo();
   fecharFila(); closeModal('modal-perm'); closeModal('modal-frota');
   $('login').classList.remove('hide');

@@ -44,10 +44,12 @@ Autoria dos commits: Hugo Marotta.
   projeto separado, roda no computador das câmeras) manda cada alerta por `--webhook` para a `ponte/ponte.py`, que junta a
   foto e envia à Edge Function `receber-alerta` (`verify_jwt` desligado; exige o cabeçalho `x-chave-ponte`, conferido pelo
   hash na tabela `chaves_ponte`, que tem RLS sem política). Tabelas `cameras` (`ultimo_sinal`: a ponte manda sinal a cada
-  minuto) e `alertas_cameras` (nível ALERTA/ATENCAO, status NOVO/CONFIRMADO/DESCARTADO, quem validou); fotos no bucket
+  minuto, só para câmera com o Vigia aberto) e `alertas_cameras` (nível ALERTA/ATENCAO, status NOVO/CONFIRMADO/DESCARTADO, quem validou); fotos no bucket
   privado `alertas-cameras`. Não confirmados são apagados com a foto depois de 30 dias (feito pela função a cada sinal).
   O vídeo nunca sai do computador. `ponte/config.json` (chave e RTSP com senha) fica fora do git; o modelo é
-  `config.exemplo.json`. Tela `page-monitoramento`: busca a cada 20 s, apita com alerta novo, Confirmar/Descartar
+  `config.exemplo.json`. Tela `page-monitoramento`: busca a cada 20 s; alerta novo toca sirene (um AudioContext liberado no primeiro clique da página,
+  com aviso na tela enquanto não liberar), aviso do navegador se a aba estiver atrás (Notification) e contador no título;
+  links das fotos valem 6 h e são renovados; Confirmar/Descartar
   (mede o acerto da IA) e Acionar Guarda por WhatsApp.
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
 - A chave `sb_publishable_...` no código é pública por design; nunca colocar a `service_role` no front-end.
