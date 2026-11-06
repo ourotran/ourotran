@@ -40,6 +40,15 @@ Autoria dos commits: Hugo Marotta.
     `Viaturas3D.montar` reaproveita a cena quando a tela é redesenhada; ela só pausa quando o cartão sai da tela.
   - Termo de recebimento e planilha da semana são impressos com `cabecalho.png` (logos da OuroTran e da Prefeitura).
   - `referencias/` (foto da viatura) e `*.docx` ficam fora do git (`.gitignore`): a foto mostra a placa de terceiros.
+- Monitoramento com IA (piloto só na OuroTran, **só admin**): o Vigia (protótipo de detecção de furto por comportamento,
+  projeto separado, roda no computador das câmeras) manda cada alerta por `--webhook` para a `ponte/ponte.py`, que junta a
+  foto e envia à Edge Function `receber-alerta` (`verify_jwt` desligado; exige o cabeçalho `x-chave-ponte`, conferido pelo
+  hash na tabela `chaves_ponte`, que tem RLS sem política). Tabelas `cameras` (`ultimo_sinal`: a ponte manda sinal a cada
+  minuto) e `alertas_cameras` (nível ALERTA/ATENCAO, status NOVO/CONFIRMADO/DESCARTADO, quem validou); fotos no bucket
+  privado `alertas-cameras`. Não confirmados são apagados com a foto depois de 30 dias (feito pela função a cada sinal).
+  O vídeo nunca sai do computador. `ponte/config.json` (chave e RTSP com senha) fica fora do git; o modelo é
+  `config.exemplo.json`. Tela `page-monitoramento`: busca a cada 20 s, apita com alerta novo, Confirmar/Descartar
+  (mede o acerto da IA) e Acionar Guarda por WhatsApp.
 - **Nenhum dado pessoal (nomes, placas, telefones) deve ir para o `index.html`**: o repositório e o site são públicos.
 - A chave `sb_publishable_...` no código é pública por design; nunca colocar a `service_role` no front-end.
 - O JS usa nomes camelCase (`numPerm`, `vencPerm`, `permId`, `wpp`); a conversão para as colunas fica em

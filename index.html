@@ -335,6 +335,21 @@ body.modo-guarda .so-admin{display:none!important}
 .usr-email{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis}
 
 /* CONTROLE DE KM */
+.mon-kpis{grid-template-columns:repeat(5,1fr)}
+.mon-cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.mon-cam{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.mon-cam b{font-size:13px;overflow-wrap:anywhere}
+.mon-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--tx3);margin-right:6px}.mon-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.mon-lista{display:flex;flex-direction:column;gap:10px}
+.mon-al{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;background:var(--s2);border:1px solid var(--b1);border-left:3px solid var(--amb);border-radius:var(--r);padding:10px}
+.mon-al.ALERTA{border-left-color:var(--red)}.mon-al.feito{opacity:.7}
+.mon-foto{width:200px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:var(--s3);display:block;cursor:zoom-in;border:0;padding:0}
+.mon-foto.sem{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--tx3);cursor:default}
+.mon-tit{font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mon-det{font-size:12px;color:var(--tx2);margin-top:4px;line-height:1.5}
+.pill.alerta{background:var(--rd);color:var(--red)}.pill.atencao{background:var(--ad);color:var(--amb)}.pill.novo{background:var(--bd);color:var(--blue)}
+.mon-filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+@media (max-width:860px){.mon-kpis{grid-template-columns:repeat(2,1fr)}.mon-al{grid-template-columns:1fr}.mon-foto{width:100%}}
 .frota-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
 .vt-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:14px;display:grid;grid-template-columns:minmax(170px,1fr) 1.6fr;gap:14px;align-items:stretch}
 .vt-card.inativa{opacity:.55}
@@ -408,6 +423,7 @@ body.modo-guarda .so-admin{display:none!important}
       <button class="nav-item so-admin" data-page="fiscalizacao">🔍 Fiscalização</button>
       <button class="nav-item so-admin" data-page="interdicoes">🚧 Interdições <span class="badge red" id="b-int"></span></button>
       <button class="nav-item so-admin" data-page="frota">🚓 Controle de KM</button>
+      <button class="nav-item so-admin" data-page="monitoramento">📹 Monitoramento IA <span class="badge red" id="b-mon" hidden></span></button>
       <button class="nav-item so-admin" data-page="whatsapp">💬 WhatsApp <span class="badge red" id="b-wpp"></span></button>
       <button class="nav-item" data-page="guarda">🛡️ Guarda Municipal <span class="badge red" id="b-guard"></span></button>
       <button class="nav-item so-admin" data-page="notificacoes">🔔 Notificações <span class="badge red" id="b-notif"></span></button>
@@ -759,6 +775,46 @@ body.modo-guarda .so-admin{display:none!important}
       </div>
     </section>
 
+    <!-- MONITORAMENTO COM IA (piloto) -->
+    <section class="page" id="page-monitoramento">
+      <div class="form-header">
+        <div><div class="form-title">Monitoramento com IA</div><div class="form-sub">PILOTO NA OUROTRAN · CÂMERAS COM O VIGIA</div></div>
+        <div class="btn-group"><button class="btn btn-outline" onclick="carregarMonitor(true)">↻ Atualizar</button></div>
+      </div>
+      <div class="kpi-grid mon-kpis">
+        <div class="kpi"><div class="kpi-lbl">Para conferir</div><div class="kpi-val" id="mon-k-novos">0</div><div class="kpi-sub">alertas novos</div></div>
+        <div class="kpi"><div class="kpi-lbl">Confirmados</div><div class="kpi-val" id="mon-k-conf">0</div><div class="kpi-sub">últimos 30 dias</div></div>
+        <div class="kpi"><div class="kpi-lbl">Descartados</div><div class="kpi-val" id="mon-k-desc">0</div><div class="kpi-sub">alarme falso</div></div>
+        <div class="kpi"><div class="kpi-lbl">Acerto da IA</div><div class="kpi-val" id="mon-k-acerto">—</div><div class="kpi-sub">confirmados ÷ conferidos</div></div>
+        <div class="kpi"><div class="kpi-lbl">Câmeras no ar</div><div class="kpi-val" id="mon-k-cams">0</div><div class="kpi-sub" id="mon-k-cams-sub">de 0</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="sec-title">📹 Câmeras <span>NO AR = SINAL NOS ÚLTIMOS 3 MINUTOS</span></div>
+        <div class="mon-cams" id="mon-cams"></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="tbl-header">
+          <div class="sec-title" style="margin:0">🚨 Alertas <span id="mon-resumo"></span></div>
+          <div class="mon-filtros">
+            <div class="fg"><label class="fl" for="mon-f-status">Situação</label>
+              <select class="fi" id="mon-f-status" onchange="renderMonitor()"><option value="NOVO">Para conferir</option><option value="CONFIRMADO">Confirmados</option><option value="DESCARTADO">Descartados</option><option value="">Todos</option></select></div>
+            <div class="fg"><label class="fl" for="mon-f-cam">Câmera</label><select class="fi" id="mon-f-cam" onchange="renderMonitor()"></select></div>
+          </div>
+        </div>
+        <div class="mon-lista" id="mon-lista"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">ℹ️ Como funciona <span>A IA SUGERE, A PESSOA DECIDE</span></div>
+        <div class="hint" style="line-height:1.7">
+          O Vigia analisa o vídeo <b>no computador ligado às câmeras</b>, e o vídeo não sai de lá. Quando ele vê um comportamento suspeito,
+          a ponte manda para cá só o alerta e a foto do momento, guardada em área restrita (só administradores veem).<br>
+          <b>Nenhum alerta é acusação.</b> Confira a foto (e o clipe gravado no computador das câmeras) antes de agir, e marque <b>Confirmar</b> ou <b>Descartar</b>:
+          é isso que mede o acerto da IA no piloto. Alertas não confirmados e as fotos deles são apagados sozinhos depois de 30 dias.<br>
+          Para ligar: no computador das câmeras, abra a pasta <b>ponte</b> do sistema e dê dois cliques em <b>iniciar_monitoramento.bat</b>. As câmeras ficam cadastradas no arquivo <b>config.json</b> dessa pasta.
+        </div>
+      </div>
+    </section>
+
     <!-- USUARIOS -->
     <section class="page" id="page-usuarios">
       <div class="form-header"><div><div class="form-title">Usuários</div><div class="form-sub">QUEM PODE ENTRAR NO SISTEMA</div></div></div>
@@ -917,7 +973,7 @@ var CATS = {
   ESCOLAR: { nome: 'Transporte Escolar', curto: 'Escolar', pag: 'escolar', pre: 'ESC' }
 };
 var CAT_DA_PAG = { permissionarios: 'TAXI', turismo: 'TURISMO', escolar: 'ESCOLAR' };
-var TITLES = { dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], interdicoes: ['Interdições', 'RUAS FECHADAS NO WAZE'], frota: ['Controle de KM', 'VIATURAS LOCADAS'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
+var TITLES = { monitoramento: ['Monitoramento com IA', 'PILOTO DE CÂMERAS INTELIGENTES'], dashboard: ['Dashboard', 'VISÃO GERAL DO SISTEMA'], permissionarios: ['Táxis', 'CADASTRO DE TAXISTAS'], turismo: ['Jipes e Jardineiras', 'CADASTRO DO TRANSPORTE TURÍSTICO'], escolar: ['Transporte Escolar', 'CADASTRO DAS VANS ESCOLARES'], fiscalizacao: ['Nova Fiscalização', 'REGISTRO EM CAMPO'], whatsapp: ['WhatsApp', 'NOTIFICAR IRREGULARES'], guarda: ['Guarda Municipal', 'RELATÓRIO DE IRREGULARES'], notificacoes: ['Notificações', 'ALERTAS'], historico: ['Histórico', 'REGISTRO COMPLETO'], interdicoes: ['Interdições', 'RUAS FECHADAS NO WAZE'], frota: ['Controle de KM', 'VIATURAS LOCADAS'], usuarios: ['Usuários', 'CONTROLE DE ACESSO'] };
 
 var permissionarios = [];
 var fiscalizacoes = [];
@@ -1058,12 +1114,170 @@ async function carregarDados() {
   $('g-email').value = config.guarda_email || '';
 }
 
+// ---------- monitoramento com IA (piloto das câmeras com o Vigia) ----------
+// Os alertas chegam pela Edge Function receber-alerta (enviados pela ponte do computador das câmeras).
+// Só admin lê. A tela busca de novo a cada 20 s e apita quando chega alerta novo.
+var monAlertas = [], monCameras = [], monFotos = {}, monUltimoId = null, monTimer = null;
+var MON_TIPOS = {
+  possivel_ocultacao: 'Possível ocultação de objeto',
+  mao_ao_bolso: 'Mão levada ao bolso ou à cintura',
+  bandeja_diferente: 'Bandeja diferente do início',
+  bandeja_suspeita: 'Bandeja diferente e mão ao bolso'
+};
+var MON_OBJETOS = { 'cell phone': 'celular', bottle: 'garrafa', cup: 'copo', book: 'livro', handbag: 'bolsa', backpack: 'mochila', wallet: 'carteira', remote: 'controle', 'wine glass': 'taça', scissors: 'tesoura', knife: 'faca' };
+
+function camNoAr(c) { return c.ultimo_sinal && Date.now() - new Date(c.ultimo_sinal).getTime() < 3 * 60 * 1000; }
+function monDetalhes(a) {
+  var d = a.detalhes || {}, partes = [];
+  if (d.produto) partes.push('objeto: ' + (MON_OBJETOS[d.produto] || d.produto));
+  if (d.local) partes.push('levado a: ' + d.local);
+  if (d.mao) partes.push('mão ' + d.mao);
+  if (d.viradas_de_cabeca) partes.push(d.viradas_de_cabeca + ' olhada(s) para os lados');
+  if (d.origem === 'modelo') partes.push('modelo treinado');
+  return partes.join(' · ');
+}
+function monBip() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3, 0.6].forEach(function(t) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 1200; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.15, ctx.currentTime + t); g.gain.setValueAtTime(0, ctx.currentTime + t + 0.18);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
+    });
+    setTimeout(function() { ctx.close(); }, 1200);
+  } catch (e) {}
+}
+
+async function carregarMonitor(manual) {
+  clearTimeout(monTimer);
+  if (papel !== 'admin' || !sessaoAtual) return;
+  try {
+    var desde = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
+    var r = await Promise.all([
+      db(sb.from('alertas_cameras').select('*').gte('quando', desde).order('quando', { ascending: false }).limit(500)),
+      db(sb.from('cameras').select('*').order('nome'))
+    ]);
+    var maxId = r[0].reduce(function(m, a) { return Math.max(m, a.id); }, 0);
+    var novos = r[0].filter(function(a) { return a.status === 'NOVO' && monUltimoId !== null && a.id > monUltimoId; });
+    monAlertas = r[0]; monCameras = r[1];
+    if (monUltimoId === null || maxId > monUltimoId) monUltimoId = maxId;
+    if (novos.length) {
+      monBip();
+      var forte = novos.some(function(a) { return a.nivel === 'ALERTA'; });
+      showToast((forte ? '🚨 ALERTA' : '⚠️ Atenção') + ' na câmera ' + novos[0].camera_nome + (novos.length > 1 ? ' (+' + (novos.length - 1) + ')' : ''), forte);
+    }
+    await monAssinarFotos();
+    monBadge();
+    if (paginaAtual === 'monitoramento') renderMonitor();
+    if (manual) showToast('Monitoramento atualizado');
+  } catch (e) {
+    console.error(e);
+    if (manual) falha(e);
+  }
+  monTimer = setTimeout(carregarMonitor, 20000);
+}
+async function monAssinarFotos() {
+  var faltam = monAlertas.map(function(a) { return a.foto; }).filter(function(f) { return f && !monFotos[f]; });
+  if (!faltam.length) return;
+  var r = await sb.storage.from('alertas-cameras').createSignedUrls(faltam, 6 * 3600);
+  (r.data || []).forEach(function(x) { if (x.signedUrl) monFotos[x.path] = x.signedUrl; });
+}
+function monBadge() {
+  var n = monAlertas.filter(function(a) { return a.status === 'NOVO'; }).length;
+  $('b-mon').textContent = n || ''; $('b-mon').hidden = !n;
+}
+
+function renderMonitor() {
+  var cams = monCameras, noAr = cams.filter(camNoAr).length;
+  var conf = monAlertas.filter(function(a) { return a.status === 'CONFIRMADO'; }).length;
+  var desc = monAlertas.filter(function(a) { return a.status === 'DESCARTADO'; }).length;
+  $('mon-k-novos').textContent = monAlertas.filter(function(a) { return a.status === 'NOVO'; }).length;
+  $('mon-k-conf').textContent = conf;
+  $('mon-k-desc').textContent = desc;
+  $('mon-k-acerto').textContent = conf + desc ? Math.round(100 * conf / (conf + desc)) + '%' : '—';
+  $('mon-k-cams').textContent = noAr;
+  $('mon-k-cams-sub').textContent = 'de ' + cams.length + ' cadastrada(s)';
+
+  $('mon-cams').innerHTML = cams.map(function(c) {
+    var on = camNoAr(c);
+    return '<div class="mon-cam"><b><span class="mon-dot' + (on ? ' on' : '') + '"></span>' + esc(c.nome) + '</b>' +
+      '<div class="hint">' + (on ? 'No ar' : 'Fora do ar') + (c.ultimo_sinal ? ' · último sinal ' + fmtDH(c.ultimo_sinal) : ' · nunca enviou sinal') + '</div>' +
+      '<div class="hint">📍 ' + esc(c.local || 'Local não informado') + '</div>' +
+      '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="editarLocalCamera(' + c.id + ')">Editar local</button></div></div>';
+  }).join('') || vazio('Nenhuma câmera ainda. Ela aparece aqui sozinha quando a ponte for ligada no computador das câmeras.');
+
+  var selCam = $('mon-f-cam'), atual = selCam.value;
+  selCam.innerHTML = '<option value="">Todas</option>' + cams.map(function(c) { return '<option value="' + c.id + '">' + esc(c.nome) + '</option>'; }).join('');
+  selCam.value = atual;
+  var st = $('mon-f-status').value, cam = selCam.value;
+  var lista = monAlertas.filter(function(a) { return (!st || a.status === st) && (!cam || String(a.camera_id) === cam); });
+  $('mon-resumo').textContent = lista.length + ' ALERTA(S)';
+
+  $('mon-lista').innerHTML = lista.map(function(a) {
+    var url = a.foto && monFotos[a.foto], forte = a.nivel === 'ALERTA';
+    var foto = url ? '<button class="mon-foto" onclick="window.open(\'' + esc(url) + '\', \'_blank\', \'noopener\')" aria-label="Abrir a foto do alerta"><img class="mon-foto" src="' + esc(url) + '" alt="Foto do alerta da câmera ' + esc(a.camera_nome) + '"></button>'
+      : '<div class="mon-foto sem">sem foto</div>';
+    var situacao = a.status === 'NOVO' ? '<span class="pill novo">Para conferir</span>'
+      : a.status === 'CONFIRMADO' ? '<span class="pill irregular">Confirmado</span>' : '<span class="pill encerrada">Descartado</span>';
+    var quem = a.status !== 'NOVO' ? '<div class="hint">' + (a.status === 'CONFIRMADO' ? 'Confirmado' : 'Descartado') + ' por ' + esc(a.validado_por || '—') +
+      (a.validado_em ? ' em ' + fmtDH(a.validado_em) : '') + (a.observacao ? ' · ' + esc(a.observacao) : '') + '</div>' : '';
+    var botoes = a.status === 'NOVO'
+      ? '<button class="btn btn-red btn-sm" onclick="validarAlerta(' + a.id + ', \'CONFIRMADO\')">✔ Confirmar</button>' +
+        '<button class="btn btn-outline btn-sm" onclick="validarAlerta(' + a.id + ', \'DESCARTADO\')">✕ Descartar (alarme falso)</button>'
+      : '<button class="btn btn-outline btn-sm" onclick="validarAlerta(' + a.id + ', \'NOVO\')">↶ Voltar para conferir</button>';
+    botoes += '<button class="btn btn-wpp btn-sm" onclick="acionarGuardaAlerta(' + a.id + ')">📱 Acionar Guarda</button>';
+    return '<div class="mon-al ' + esc(a.nivel) + (a.status === 'NOVO' ? '' : ' feito') + '">' + foto +
+      '<div><div class="mon-tit"><span class="pill ' + (forte ? 'alerta">ALERTA' : 'atencao">ATENÇÃO') + '</span>' + esc(MON_TIPOS[a.tipo] || a.tipo) + situacao + '</div>' +
+      '<div class="mon-det">📹 ' + esc(a.camera_nome) + ' · 🕒 ' + fmtDH(a.quando) + (a.pontuacao != null ? ' · certeza da IA ' + Math.round(a.pontuacao * 100) + '%' : '') + '</div>' +
+      (monDetalhes(a) ? '<div class="mon-det">' + esc(monDetalhes(a)) + '</div>' : '') + quem +
+      '<div class="btn-group" style="margin-top:8px">' + botoes + '</div></div></div>';
+  }).join('') || vazio(st === 'NOVO' ? 'Nenhum alerta para conferir.' : 'Nenhum alerta nos últimos 30 dias com esse filtro.');
+}
+
+function getAlerta(id) { return monAlertas.find(function(a) { return a.id === id; }); }
+function validarAlerta(id, status) {
+  var a = getAlerta(id); if (!a) return;
+  var obs = '';
+  if (status !== 'NOVO') {
+    obs = prompt(status === 'CONFIRMADO' ? 'Confirmar o alerta. Observação (o que aconteceu, providência tomada):' : 'Descartar como alarme falso. Observação (opcional):', a.observacao || '');
+    if (obs === null) return;
+  }
+  acao(async function() {
+    var dados = status === 'NOVO' ? { status: 'NOVO', validado_por: null, validado_em: null, observacao: '' }
+      : { status: status, validado_por: sessaoAtual.user.email, validado_em: new Date().toISOString(), observacao: obs.trim() };
+    await db(sb.from('alertas_cameras').update(dados).eq('id', id));
+    Object.assign(a, dados);
+    monBadge(); renderMonitor();
+    showToast(status === 'CONFIRMADO' ? 'Alerta confirmado' : status === 'DESCARTADO' ? 'Alerta descartado' : 'Alerta voltou para conferir');
+  });
+}
+function editarLocalCamera(id) {
+  var c = monCameras.find(function(x) { return x.id === id; }); if (!c) return;
+  var local = prompt('Local da câmera "' + c.nome + '" (ex: Sede da OuroTran — recepção):', c.local || '');
+  if (local === null) return;
+  acao(async function() {
+    await db(sb.from('cameras').update({ local: local.trim() }).eq('id', id));
+    c.local = local.trim(); renderMonitor(); showToast('Local salvo');
+  });
+}
+function acionarGuardaAlerta(id) {
+  var a = getAlerta(id); if (!a) return;
+  var c = monCameras.find(function(x) { return x.id === a.camera_id; });
+  var msg = '🚨 *OuroTran — alerta de câmera*\n\n' + (MON_TIPOS[a.tipo] || a.tipo) + '\n📹 Câmera: ' + a.camera_nome +
+    (c && c.local ? '\n📍 Local: ' + c.local : '') + '\n🕒 ' + fmtDH(a.quando) +
+    '\n\nAlerta gerado por IA e conferido pela equipe da OuroTran. Favor verificar no local.';
+  var tel = config.guarda_tel;
+  window.open(waLink(telValido(tel) ? tel : '', msg), '_blank', 'noopener');
+}
+
 // ---------- login ----------
 var sessaoAtual = null;
 
 function loginMsg(msg, erro) { $('lg-msg').textContent = msg || ''; $('lg-msg').classList.toggle('err', !!erro); }
 function mostrarLogin(msg, erro) {
   permissionarios = []; fiscalizacoes = []; auxiliares = []; interdicoes = []; editInt = null; frota = []; registrosKm = [];
+  clearTimeout(monTimer); monAlertas = []; monCameras = []; monFotos = {}; monUltimoId = null;
   if (window.Viaturas3D) Viaturas3D.limparTudo();
   fecharFila(); closeModal('modal-perm'); closeModal('modal-frota');
   $('login').classList.remove('hide');
@@ -1100,7 +1314,7 @@ async function iniciarSessao(session) {
     $('lg-senha').value = '';
     irPara(paginaAtual);
     updateBadges();
-    if (papel === 'admin') verificarDadosAntigos();
+    if (papel === 'admin') { verificarDadosAntigos(); carregarMonitor(); }
   } catch (e) {
     mostrarLogin('Não foi possível carregar os dados: ' + traduzErro(e), true);
   }
@@ -1157,7 +1371,7 @@ async function sair() {
 }
 
 // ---------- navegação ----------
-var RENDER = { dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios, interdicoes: renderInterdicoes, frota: renderFrota };
+var RENDER = { monitoramento: renderMonitor, dashboard: updateDash, permissionarios: renderPerm, turismo: renderPerm, escolar: renderPerm, fiscalizacao: renderFisc, whatsapp: renderWpp, guarda: renderGuarda, notificacoes: renderNotif, historico: renderHist, usuarios: renderUsuarios, interdicoes: renderInterdicoes, frota: renderFrota };
 var paginaAtual = 'dashboard';
 var papel = 'admin';
 

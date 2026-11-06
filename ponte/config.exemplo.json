@@ -1,0 +1,14 @@
+{
+  "url": "https://hyjhxplpylbaerpkdrnl.supabase.co/functions/v1/receber-alerta",
+  "chave": "COLE-AQUI-A-CHAVE-DA-PONTE",
+  "pasta_vigia": "C:/caminho/da/pasta/do/Vigia",
+  "pasta_alertas": "alertas_ourotran",
+  "cameras": [
+    {
+      "nome": "OuroTran - Sede",
+      "fonte": "rtsp://usuario:senha@IP:554/cam/realmonitor?channel=1&subtype=1",
+      "ativa": true,
+      "opcoes": []
+    }
+  ]
+}

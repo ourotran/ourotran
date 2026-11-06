@@ -3,3 +3,8 @@ referencias/
 *.docx
 # material para a imprensa (gerado com dados fictícios, fica só no computador)
 imprensa/
+
+# ponte das cameras: chave secreta, endereco RTSP com senha e alertas guardados ficam so no computador
+ponte/config.json
+ponte/pendentes.jsonl
+ponte/__pycache__/
