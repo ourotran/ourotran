@@ -779,7 +779,7 @@ body.modo-guarda .so-admin{display:none!important}
     <section class="page" id="page-monitoramento">
       <div class="form-header">
         <div><div class="form-title">Monitoramento com IA</div><div class="form-sub">PILOTO NA OUROTRAN · CÂMERAS COM O VIGIA</div></div>
-        <div class="btn-group"><button class="btn btn-outline" onclick="carregarMonitor(true)">↻ Atualizar</button></div>
+        <div class="btn-group"><button class="btn btn-outline" onclick="monSirene(true)">🔊 Testar sirene</button><button class="btn btn-outline" onclick="carregarMonitor(true)">↻ Atualizar</button></div>
       </div>
       <div class="kpi-grid mon-kpis">
         <div class="kpi"><div class="kpi-lbl">Para conferir</div><div class="kpi-val" id="mon-k-novos">0</div><div class="kpi-sub">alertas novos</div></div>
@@ -1136,16 +1136,24 @@ function monDetalhes(a) {
   if (d.origem === 'modelo') partes.push('modelo treinado');
   return partes.join(' · ');
 }
-function monBip() {
+// sirene (sobe e desce o tom): ALERTA = 3 ciclos rápidos e mais altos; ATENÇÃO = 2 ciclos lentos
+function monSirene(forte) {
   try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.3, 0.6].forEach(function(t) {
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.value = 1200; o.connect(g); g.connect(ctx.destination);
-      g.gain.setValueAtTime(0.15, ctx.currentTime + t); g.gain.setValueAtTime(0, ctx.currentTime + t + 0.18);
-      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
-    });
-    setTimeout(function() { ctx.close(); }, 1200);
+    var ctx = new (window.AudioContext || window.webkitAudioContext)(), t0 = ctx.currentTime;
+    var ciclos = forte ? 3 : 2, dur = forte ? 0.9 : 1.2, vol = forte ? 0.22 : 0.14;
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.connect(g); g.connect(ctx.destination);
+    for (var i = 0; i < ciclos; i++) {
+      var t = t0 + i * dur;
+      o.frequency.setValueAtTime(650, t);
+      o.frequency.linearRampToValueAtTime(1350, t + dur / 2);
+      o.frequency.linearRampToValueAtTime(650, t + dur);
+    }
+    var fim = t0 + ciclos * dur;
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.05);
+    g.gain.setValueAtTime(vol, fim - 0.1); g.gain.linearRampToValueAtTime(0, fim);
+    o.start(t0); o.stop(fim);
+    setTimeout(function() { ctx.close(); }, (ciclos * dur + 0.5) * 1000);
   } catch (e) {}
 }
 
@@ -1163,8 +1171,8 @@ async function carregarMonitor(manual) {
     monAlertas = r[0]; monCameras = r[1];
     if (monUltimoId === null || maxId > monUltimoId) monUltimoId = maxId;
     if (novos.length) {
-      monBip();
       var forte = novos.some(function(a) { return a.nivel === 'ALERTA'; });
+      monSirene(forte);
       showToast((forte ? '🚨 ALERTA' : '⚠️ Atenção') + ' na câmera ' + novos[0].camera_nome + (novos.length > 1 ? ' (+' + (novos.length - 1) + ')' : ''), forte);
     }
     await monAssinarFotos();
