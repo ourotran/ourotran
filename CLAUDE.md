@@ -33,8 +33,12 @@ Autoria dos commits: Hugo Marotta.
   e `registros_km` (`veiculo_id` com cascade, data, `km_inicial`, `km_final`, `km_rodado` calculado pelo banco,
   responsável, observação; o banco recusa KM final menor que o inicial). **Só admin** lê e grava (a Guarda não vê).
   As 4 viaturas foram cadastradas direto no banco, não em arquivo do repositório.
-  - `viaturas3d.js`: viaturas em 3D (Three.js 0.128 pelo CDN, carregado só quando a aba abre). Os modelos são montados no
-    próprio código (forma lateral extrudada, sem .glb). A plotagem da foto oficial (amarelo-limão, faixas brancas e pretas em
+  - `viaturas3d.js`: viaturas em 3D (Three.js 0.128 pelo CDN, carregado só quando a aba abre, com OrbitControls,
+    RoomEnvironment e RoundedBoxGeometry). Os modelos são montados no próprio código, sem .glb, nas medidas do Polo 2023 e da
+    S10 2025: a carroceria é uma malha de cortes transversais em superelipse ao longo do comprimento (`corteBaixo`, com as caixas
+    de roda; `corteCabine`, cuja metade dos pontos sobe a lateral para os vidros ficarem em v de 0 a `V_BORDA` da textura),
+    tampas planas pintadas na frente/traseira (`FRENTES`/`TRASEIRAS`), caçamba aberta com forro, para-lamas, estribos,
+    faróis, lanternas, retrovisores e rodas como peças. Pintura com verniz (MeshPhysicalMaterial) e reflexo do ambiente. A plotagem da foto oficial (amarelo-limão, faixas brancas e pretas em
     onda, xadrez, brasão `brasao-ourotran.png`, "118" com telefone, prefixo, giroflex) é pintada em canvas. Placa e prefixo vêm
     do banco e são desenhados na hora. Zoom só com Ctrl + rolagem ou pinça, para a rolagem continuar descendo a página.
     `Viaturas3D.montar` reaproveita a cena quando a tela é redesenhada; ela só pausa quando o cartão sai da tela.
