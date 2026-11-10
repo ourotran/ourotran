@@ -39,15 +39,24 @@
   function misturar(a, b, t) { return a + (b - a) * t; }
   // superelipse: n alto = mais quadrado, n baixo = mais redondo
   function se(c, n) { return (c < 0 ? -1 : 1) * Math.pow(Math.abs(c), 2 / n); }
-  // perfil por pontos [x, y] (x decrescente ou crescente), com transição suave entre eles
+  // perfil por pontos [x, y]: curva cúbica monótona (Fritsch-Carlson) que passa por todos os pontos sem criar ondas.
+  // (Uma transição "suave" em cada trecho deixaria a inclinação zero em cada ponto e o teto sairia ondulado.)
   function perfil(pts) {
-    var p = pts.slice().sort(function(a, b) { return a[0] - b[0]; });
+    var p = pts.slice().sort(function(a, b) { return a[0] - b[0]; }), n = p.length, d = [], m = [], i;
+    for (i = 0; i < n - 1; i++) d.push((p[i + 1][1] - p[i][1]) / (p[i + 1][0] - p[i][0]));
+    m[0] = d[0]; m[n - 1] = d[n - 2];
+    for (i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+    for (i = 0; i < n - 1; i++) {
+      if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+      var a = m[i] / d[i], b = m[i + 1] / d[i], q = a * a + b * b;
+      if (q > 9) { var t = 3 / Math.sqrt(q); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+    }
     return function(x) {
       if (x <= p[0][0]) return p[0][1];
-      for (var i = 1; i < p.length; i++) {
-        if (x <= p[i][0]) { var t = (x - p[i - 1][0]) / (p[i][0] - p[i - 1][0]); return misturar(p[i - 1][1], p[i][1], suave(t)); }
-      }
-      return p[p.length - 1][1];
+      if (x >= p[n - 1][0]) return p[n - 1][1];
+      for (var k = 0; x > p[k + 1][0]; k++) {}
+      var h = p[k + 1][0] - p[k][0], t = (x - p[k][0]) / h, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * p[k][1] + (t3 - 2 * t2 + t) * h * m[k] + (-2 * t3 + 3 * t2) * p[k + 1][1] + (t3 - t2) * h * m[k + 1];
     };
   }
 
@@ -55,12 +64,12 @@
   // baixo: carroceria até a linha de cintura (capô, laterais, caçamba); cabine: a parte de cima, com os vidros.
   var MODELOS = {
     POLO: function() {
-      var L = 4.07, h = L / 2;
-      var sp = { nome: 'POLO', L: L, A0: 0.873, xf: 1.195, xr: -1.371, r: 0.305, R: 0.37, largPneu: 0.19, nT: 7, nB: 10, picape: false };
+      var L = 4.079, h = L / 2;
+      var sp = { nome: 'POLO', L: L, A0: 0.873, xf: 1.2, xr: -1.366, r: 0.31, R: 0.37, largPneu: 0.185, nB: 10, picape: false, caimento: 0.03, ombro: [0.1, 0.07] };
       sp.yb = function(x) { return 0.18 + 0.12 * rampa(x, 1.5, h) + 0.15 * rampa(-x, 1.55, h); };
       sp.ym = function(x) { return 0.5 - 0.06 * rampa(x, 1.6, h); };
       sp.cintura = perfil([[h, 0.78], [1.75, 0.84], [1.2, 0.885], [0.88, 0.905], [-1.0, 0.965], [-1.85, 1.0], [-h, 0.99]]);
-      sp.topo = function(x) { return sp.cintura(x) + (x > 0.88 ? 0.035 * (1 - rampa(x, 1.9, h)) : 0.008); };
+      sp.topo = function(x) { return sp.cintura(x) + 0.008 + 0.03 * rampa(x, 0.85, 1.05) * (1 - rampa(x, 1.9, h)); };
       sp.A = function(x) { return sp.A0 - 0.14 * Math.pow(rampa(x, 1.5, h), 1.8) - 0.08 * Math.pow(rampa(-x, 1.7, h), 1.8); };
       sp.cab = { xFrente: 0.9, xTras: -1.99, xParabrisa: -0.12, xTeto: -1.74, n: 6,
         teto: perfil([[0.9, 0.905], [0.35, 1.22], [-0.12, 1.42], [-0.8, 1.468], [-1.6, 1.44], [-1.74, 1.4], [-1.99, 1.02]]),
@@ -75,19 +84,16 @@
     S10_CABINE_SIMPLES: function() { return s10(true); }
   };
   function s10(simples) {
-    var L = 5.37, h = L / 2;
-    var sp = { nome: simples ? 'S10_CS' : 'S10_CD', L: L, A0: 0.905, xf: 1.745, xr: -1.351, r: 0.388, R: 0.465, largPneu: 0.265, nT: 9, nB: 12, picape: true, paralamas: true };
+    var L = 5.4, h = L / 2;
+    var sp = { nome: simples ? 'S10_CS' : 'S10_CD', L: L, A0: 0.905, xf: 1.76, xr: -1.336, r: 0.39, R: 0.465, largPneu: 0.265, nB: 12, picape: true, paralamas: true, caimento: 0.015, ombro: [0.075, 0.05] };
     var xCab = simples ? -0.55 : -1.33; // traseira da cabine
     sp.yb = function(x) { return 0.42 + 0.05 * rampa(x, 2.3, h) + 0.09 * rampa(-x, 2.35, h); };
     sp.ym = function() { return 0.82; };
     sp.cintura = perfil([[h, 1.23], [2.3, 1.255], [1.05, 1.285], [xCab + 0.05, 1.3], [xCab - 0.04, 1.255], [-h, 1.25]]);
-    sp.topo = function(x) {
-      if (x > 1.05) return sp.cintura(x) + 0.035 - 0.03 * rampa(x, 2.55, h);
-      return sp.cintura(x) + (x > xCab ? 0.008 : 0);
-    };
+    sp.topo = function(x) { return sp.cintura(x) + 0.008 * rampa(x, xCab - 0.06, xCab) + 0.027 * rampa(x, 1.0, 1.15) * (1 - rampa(x, 2.6, h)); };
     sp.A = function(x) { return sp.A0 - 0.06 * Math.pow(rampa(x, 2.25, h), 1.5) - 0.03 * rampa(-x, 2.5, h); };
     sp.cab = { xFrente: 1.07, xTras: xCab, xParabrisa: 0.3, xTeto: xCab + 0.12, n: 9, fundo: true,
-      teto: perfil([[1.07, 1.29], [0.6, 1.62], [0.3, 1.8], [-0.4, 1.825], [xCab + 0.1, 1.81], [xCab, 1.77]]),
+      teto: perfil([[1.07, 1.29], [0.6, 1.63], [0.3, 1.805], [-0.4, 1.83], [xCab + 0.1, 1.815], [xCab, 1.78]]),
       larguraTeto: function(x) { return 0.73 - 0.06 * rampa(x, 0.2, 0.9); },
       janelas: simples ? [[1.0, -0.42]] : [[1.0, -0.12], [-0.2, -1.2]], pilares: simples ? [] : [-0.16] };
     sp.cacamba = { frente: xCab - 0.05, tras: -h, interna: 0.775, piso: 0.82 };
@@ -99,18 +105,20 @@
 
   // ---------- malha por cortes transversais ----------
   // corte do "baixo" no ponto x: metade direita, do centro de baixo (t = -90°) ao centro de cima (t = +90°)
-  var M_BAIXO = 40, M_CAB = 24;
+  // Pontos de cada metade: 13 no fundo + 9 na lateral + 8 no ombro + 11 no capô/teto = 41 (sempre o mesmo número,
+  // para os cortes vizinhos se ligarem ponto a ponto).
+  var M_CAB = 24;
+  function larguraOmbro(sp, x) { return sp.A(x) * (1 - sp.caimento); } // largura da lateral na linha de cintura
   function corteBaixo(sp, x) {
-    var yb = sp.yb(x), ym = sp.ym(x), yt = sp.topo(x), A = sp.A(x), pts = [];
+    var yb = sp.yb(x), ys = sp.cintura(x), yt = sp.topo(x), A = sp.A(x), Aw = larguraOmbro(sp, x);
+    var rz = sp.ombro[0], ry = sp.ombro[1], ym = Math.min(sp.ym(x), ys - ry - 0.03), pts = [], k;
     var arco = null;
     [sp.xf, sp.xr].forEach(function(xw) { var d = x - xw; if (Math.abs(d) < sp.R) arco = sp.r + Math.sqrt(sp.R * sp.R - d * d); });
-    for (var i = 0; i <= M_BAIXO; i++) {
-      var t = -Math.PI / 2 + Math.PI * i / M_BAIXO, c = Math.cos(t), s = Math.sin(t), y, z;
-      if (s < 0) { y = ym + (ym - yb) * se(s, sp.nB); z = A * se(c, sp.nB); }
-      else { var f = se(s, sp.nT); y = ym + (yt - ym) * f; z = A * (1 - 0.035 * f) * se(c, sp.nT); }
-      if (arco !== null && s < 0.35 && y < arco) y = arco; // caixa de roda
-      pts.push([z, y]);
-    }
+    function poe(z, y, roda) { if (roda && arco !== null && y < arco) y = arco; pts.push([z, y]); } // caixa de roda
+    for (k = 0; k <= 12; k++) { var t = -Math.PI / 2 + (Math.PI / 2) * k / 12; poe(A * se(Math.cos(t), sp.nB), ym + (ym - yb) * se(Math.sin(t), sp.nB), true); }
+    for (k = 1; k <= 9; k++) { var f = k / 9; poe(A - (A - Aw) * f, ym + (ys - ry - ym) * f, true); }
+    for (k = 1; k <= 8; k++) { var a = (Math.PI / 2) * k / 8; poe(Aw - rz + rz * se(Math.cos(a), 4), ys - ry + ry * se(Math.sin(a), 4), false); }
+    for (k = 1; k <= 11; k++) { var u = 1 - k / 11; poe((Aw - rz) * u, ys + (yt - ys) * (1 - u * u), false); }
     return pts;
   }
   // corte da cabine: da cintura direita ao centro do teto e espelhado até a cintura esquerda.
@@ -119,7 +127,7 @@
   var E_BORDA = 0.86, V_BORDA = 0.25;
   function corteCabine(sp, x) {
     var c = sp.cab, yb = sp.cintura(x), H = Math.max(c.teto(x) - yb, 0.004);
-    var wb = sp.A(x) - 0.03, wt = Math.min(c.larguraTeto(x), wb), meio = [], K = M_CAB / 2;
+    var wb = larguraOmbro(sp, x) - sp.ombro[0] * 0.75, wt = Math.min(c.larguraTeto(x), wb), meio = [], K = M_CAB / 2;
     var tE = Math.asin(Math.pow(E_BORDA, c.n / 2));
     for (var i = 0; i <= M_CAB; i++) {
       var t = i <= K ? Math.asin(Math.pow(E_BORDA * i / K, c.n / 2)) : tE + (Math.PI / 2 - tE) * (i - K) / K;
@@ -307,7 +315,7 @@
     g.fillStyle = COR.lima; g.fillRect(0, 0, W, H);
     function vidroRet(xa, xb, va, vb, desce) {
       var gr = g.createLinearGradient(0, R(va), 0, R(vb));
-      gr.addColorStop(0, desce ? '#0b1014' : '#3c4c57'); gr.addColorStop(1, desce ? '#3c4c57' : '#0b1014');
+      gr.addColorStop(0, desce ? '#070a0c' : '#1f2930'); gr.addColorStop(1, desce ? '#1f2930' : '#070a0c');
       g.fillStyle = COR.preto; g.fillRect(X(xa) - 6, R(va) - 6, X(xb) - X(xa) + 12, R(vb) - R(va) + 12);
       g.fillStyle = gr; g.fillRect(X(xa), R(va), X(xb) - X(xa), R(vb) - R(va));
     }
@@ -335,7 +343,7 @@
     var va = vE + 0.015, vb = 1 - vE - 0.015;
     g.fillStyle = COR.preto; g.fillRect(X(c.xParabrisa) - 4, R(va), X(c.xFrente) - X(c.xParabrisa) + 8, R(vb) - R(va));
     var gr = g.createLinearGradient(X(c.xFrente), 0, X(c.xParabrisa), 0);
-    gr.addColorStop(0, '#0d1317'); gr.addColorStop(1, '#45535d');
+    gr.addColorStop(0, '#080c0f'); gr.addColorStop(1, '#26313a');
     g.fillStyle = gr; g.fillRect(X(c.xParabrisa) + 18, R(va + 0.03), X(c.xFrente) - X(c.xParabrisa) - 40, R(vb - va - 0.06));
     if (c.vidroTras) {
       g.fillStyle = COR.preto; g.fillRect(X(c.xTras), R(va), X(c.xTeto) - X(c.xTras), R(vb) - R(va));
@@ -548,7 +556,7 @@
     var geoC = malhaCortes(xsC, cortesC, false, function(x, y, z, j, n) { return [(x - c.xTras) / (c.xFrente - c.xTras), j / (n - 1)]; });
     orientar(geoC, function(cen, n) { return Math.abs(n.y) > 0.8 && cen.y > 1.1 ? n.y > 0 : null; });
     geoC.computeVertexNormals();
-    carro.add(malha(geoC, tinta({ map: texCab, envMapIntensity: 0.35, clearcoat: 0.7, clearcoatRoughness: 0.12 })));
+    carro.add(malha(geoC, tinta({ map: texCab, envMapIntensity: 0.25, clearcoat: 0.6, clearcoatRoughness: 0.15 })));
     if (c.fundo) { // parede de trás da cabine, com o vidro traseiro
       var anelC = corteCabine(sp, c.xTras), yc = sp.cintura(c.xTras), wc = anelC[0][0];
       var pc = pintarFace(wc + 0.02, yc - 0.02, c.teto(c.xTras) + 0.04, function(g) {
@@ -629,7 +637,7 @@
 
     // retrovisores
     [-1, 1].forEach(function(l) {
-      var xm = c.xFrente - 0.2, ym = sp.cintura(xm) + (sp.picape ? 0.1 : 0.08), lado = sp.A(xm) - 0.04;
+      var xm = c.xFrente - 0.2, ym = sp.cintura(xm) + (sp.picape ? 0.1 : 0.08), lado = larguraOmbro(sp, xm) - 0.03;
       var larg = sp.picape ? 0.24 : 0.2, zm = l * (lado + 0.05 + larg / 2);
       var capa = malha(rbox(0.09, sp.picape ? 0.17 : 0.12, larg, 0.04), M.preto);
       capa.position.set(xm, ym, zm); capa.rotation.y = l * 0.12; carro.add(capa);

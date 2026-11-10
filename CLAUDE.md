@@ -35,8 +35,9 @@ Autoria dos commits: Hugo Marotta.
   As 4 viaturas foram cadastradas direto no banco, não em arquivo do repositório.
   - `viaturas3d.js`: viaturas em 3D (Three.js 0.128 pelo CDN, carregado só quando a aba abre, com OrbitControls,
     RoomEnvironment e RoundedBoxGeometry). Os modelos são montados no próprio código, sem .glb, nas medidas do Polo 2023 e da
-    S10 2025: a carroceria é uma malha de cortes transversais em superelipse ao longo do comprimento (`corteBaixo`, com as caixas
-    de roda; `corteCabine`, cuja metade dos pontos sobe a lateral para os vidros ficarem em v de 0 a `V_BORDA` da textura),
+    S10 2025: a carroceria é uma malha de cortes transversais ao longo do comprimento (`corteBaixo`: fundo arredondado,
+    lateral reta, ombro com raio e capô por cima, com as caixas de roda; as linhas de teto e cintura usam `perfil`, curva cúbica
+    monótona — interpolar trecho a trecho com suavização deixava o teto ondulado; `corteCabine`, cuja metade dos pontos sobe a lateral para os vidros ficarem em v de 0 a `V_BORDA` da textura),
     tampas planas pintadas na frente/traseira (`FRENTES`/`TRASEIRAS`), caçamba aberta com forro, para-lamas, estribos,
     faróis, lanternas, retrovisores e rodas como peças. Pintura com verniz (MeshPhysicalMaterial) e reflexo do ambiente. A plotagem da foto oficial (amarelo-limão, faixas brancas e pretas em
     onda, xadrez, brasão `brasao-ourotran.png`, "118" com telefone, prefixo, giroflex) é pintada em canvas. Placa e prefixo vêm
